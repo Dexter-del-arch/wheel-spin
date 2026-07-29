@@ -453,7 +453,6 @@
     </div>
 
     <script>
-        // Default entries if local storage is empty
         const defaultEntries = [
             { name: 'Huge', color: '#2563eb', fakeChance: '50', realWeight: 10, img: null },
             { name: 'Titanic', color: '#dc2626', fakeChance: '30', realWeight: 20, img: null },
@@ -470,9 +469,7 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        /* --- LocalStorage Persistence --- */
         function saveData() {
-            // Save entries without images (images are heavy DataURLs, so we save basic string format)
             const cleanEntries = entries.map(e => ({
                 name: e.name,
                 color: e.color,
@@ -653,24 +650,30 @@
                 ctx.translate(250, 250);
                 ctx.rotate(angle + sliceAngle / 2);
 
+                // Auto-adjust font size based on text length to prevent clipping into center
+                let fontSize = 22;
+                if (item.name.length > 8) fontSize = 17;
+                if (item.name.length > 12) fontSize = 14;
+
                 if (item.img) {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.arc(180, 0, 27, 0, Math.PI * 2);
+                    ctx.arc(195, 0, 24, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
-                    ctx.drawImage(item.img, 153, -27, 54, 54);
+                    ctx.drawImage(item.img, 171, -24, 48, 48);
                     ctx.restore();
                     
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 20px Arial";
+                    ctx.font = `bold ${fontSize}px Arial`;
                     ctx.textAlign = "right";
-                    ctx.fillText(item.name, 140, 7);
+                    ctx.fillText(item.name, 160, fontSize / 3);
                 } else {
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 22px Arial";
+                    ctx.font = `bold ${fontSize}px Arial`;
                     ctx.textAlign = "right";
-                    ctx.fillText(item.name, 200, 7);
+                    // Draw text closer to outer edge (radius 220)
+                    ctx.fillText(item.name, 220, fontSize / 3);
                 }
                 
                 ctx.restore();
@@ -877,12 +880,10 @@
             });
         }
 
-        // Key trigger
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'Enter') spin();
         });
 
-        // Initialize with Saved Data
         loadSavedData();
         renderEntries();
     </script>
