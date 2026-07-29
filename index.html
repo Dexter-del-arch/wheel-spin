@@ -161,10 +161,10 @@
             background: #7c3aed;
             font-weight: bold;
             min-width: 32px;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .btn-secret.visible {
-            display: inline-block; /* Shown when toggled */
+            display: inline-block;
         }
 
         .tab-content {
@@ -459,7 +459,6 @@
 
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <!-- Double click on Entries tab toggles Secret 'S' Button visibility -->
             <button class="tab-btn active" id="entriesTabBtn" onclick="switchTab('settings')" ondblclick="toggleSecretButton()">Entries (<span id="entryCount">0</span>)</button>
             <button class="tab-btn" id="historyTabBtn" onclick="switchTab('history')" ondblclick="toggleHistoryEditMode()">History</button>
         </div>
@@ -533,7 +532,7 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
         let isHistoryEditMode = false;
-        let isSecretButtonVisible = false; // Tracks 'S' button state
+        let isSecretButtonVisible = false;
 
         const wheelSound = new Audio('Wheel Sound');
 
@@ -892,6 +891,7 @@
             if (tab === 'settings') {
                 const entriesBtn = document.getElementById('entriesTabBtn');
                 entriesBtn.classList.add('active');
+                if (isSecretButtonVisible) entriesBtn.classList.add('editing');
                 document.getElementById('tabSettings').classList.add('active');
                 document.getElementById('toolsBar').style.display = 'flex';
             } else {
@@ -903,7 +903,6 @@
             }
         }
 
-        /* --- Toggle Secret 'S' Button Visibility on Double Click --- */
         function toggleSecretButton() {
             isSecretButtonVisible = !isSecretButtonVisible;
             const secretBtn = document.getElementById('secretBtn');
@@ -918,7 +917,6 @@
             }
         }
 
-        /* --- Toggle History Edit Mode on Double Click --- */
         function toggleHistoryEditMode() {
             isHistoryEditMode = !isHistoryEditMode;
             const historyBtn = document.getElementById('historyTabBtn');
@@ -971,16 +969,28 @@
             }
         }
 
+        /* --- Combined Chances Overlay: Merges items with the same name and sums their percentages --- */
         function updateChancesOverlay() {
             const list = document.getElementById('chancesList');
             list.innerHTML = '';
 
+            const mergedChances = {};
             entries.forEach(item => {
+                const name = item.name.trim() || 'Unnamed';
+                const chance = parseFloat(item.fakeChance) || 0;
+                if (mergedChances[name]) {
+                    mergedChances[name] += chance;
+                } else {
+                    mergedChances[name] = chance;
+                }
+            });
+
+            for (const [name, totalChance] of Object.entries(mergedChances)) {
                 const row = document.createElement('div');
                 row.className = 'chance-item';
-                row.innerHTML = `<span>${item.name}</span><b>${item.fakeChance}%</b>`;
+                row.innerHTML = `<span>${name}</span><b>${totalChance}%</b>`;
                 list.appendChild(row);
-            });
+            }
         }
 
         function openSecretModal() {
@@ -1098,7 +1108,6 @@
             }
 
             list.innerHTML = '';
-            history.history?.forEach ? null : null; // safe check
             history.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = 'history-item';
