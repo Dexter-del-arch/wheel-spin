@@ -21,12 +21,19 @@
             gap: 20px;
         }
 
+        /* Wheel Area shifts smoothly when sidebar opens/closes */
         .wheel-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            transition: transform 0.3s ease;
+            transform: translateX(190px); /* Centers the wheel when sidebar is open */
+        }
+
+        body.sidebar-closed .wheel-area {
+            transform: translateX(0px); /* Centers the wheel perfectly on the whole screen when sidebar is closed */
         }
 
         .wheel-container {
@@ -963,13 +970,14 @@
             if (sidebar.classList.contains('closed')) {
                 overlay.classList.add('visible');
                 toggleIcon.style.transform = 'rotate(180deg)';
+                document.body.classList.add('sidebar-closed');
             } else {
                 overlay.classList.remove('visible');
                 toggleIcon.style.transform = 'rotate(0deg)';
+                document.body.classList.remove('sidebar-closed');
             }
         }
 
-        /* --- Combined Chances Overlay: Merges items with the same name and sums their percentages --- */
         function updateChancesOverlay() {
             const list = document.getElementById('chancesList');
             list.innerHTML = '';
