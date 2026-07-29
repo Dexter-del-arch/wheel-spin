@@ -43,19 +43,19 @@
             cursor: pointer;
         }
 
-        /* Black arrow placed directly at the top center pointing DOWN */
+        /* Black Pointer Arrow on the RIGHT side pointing LEFT */
         .pointer {
             position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 0;
             height: 0;
-            border-left: 18px solid transparent;
-            border-right: 18px solid transparent;
-            border-top: 36px solid #000000;
+            border-top: 18px solid transparent;
+            border-bottom: 18px solid transparent;
+            border-right: 36px solid #000000;
             z-index: 10;
-            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
+            filter: drop-shadow(-3px 0px 3px rgba(0,0,0,0.3));
         }
 
         /* Floating Sidebar Box with Rounded Corners */
@@ -284,7 +284,7 @@
             font-size: 14px;
         }
 
-        /* Fixed Chances Overlay position on TOP RIGHT side */
+        /* Chances Overlay position on TOP RIGHT side */
         .chances-overlay {
             position: absolute;
             top: 25px;
@@ -394,6 +394,7 @@
 
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
+            <!-- Black pointer arrow on the right pointing left -->
             <div class="pointer"></div>
             <canvas id="canvas" width="520" height="520"></canvas>
         </div>
@@ -482,9 +483,6 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
 
-        // Custom Sound file (Put wheel_tick.mp3 in your GitHub folder!)
-        const customTickSound = new Audio('wheel_tick.mp3');
-
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -497,31 +495,28 @@
             }
         }
 
-        /* --- Click Sound Playback --- */
+        /* --- Wheel of Names Realistic Click Sound Generator --- */
         function playTickSound() {
-            // Priority 1: Try playing custom uploaded audio file (wheel_tick.mp3)
-            customTickSound.cloneNode().play().catch(() => {
-                // Priority 2: Fallback to high-pitched plastic wheel click synthesis
-                try {
-                    if (!audioCtx) return;
-                    const now = audioCtx.currentTime;
+            try {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
 
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
+                // High-pitch crisp plastic tick sound like wheelofnames
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
 
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(1600, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.02);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1500, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.012);
 
-                    gain.gain.setValueAtTime(0.3, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
 
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.02);
-                } catch(e){}
-            });
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.012);
+            } catch(e){}
         }
 
         function playWinSound() {
@@ -778,8 +773,8 @@
                 ctx.restore();
             });
 
-            // Top pointer alignment angle calculation
-            const currentNormalizedAngle = (1.5 * Math.PI - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
+            // Right pointer is at 0 degrees (0 rad)
+            const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
             let currentSliceIndex = 0;
             for (let i = 0; i < sliceAngles.length; i++) {
                 if (currentNormalizedAngle >= sliceAngles[i].start && currentNormalizedAngle < sliceAngles[i].end) {
@@ -924,7 +919,7 @@
             return 0;
         }
 
-        /* --- Smooth Spin Physics --- */
+        /* --- 5-Second Wheel of Names Physics Curve --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
@@ -937,20 +932,22 @@
             const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
             const targetSliceAngle = winningSlice.start + randomOffset;
             
-            const extraRotations = (Math.floor(Math.random() * 5) + 10) * 2 * Math.PI; 
+            const extraRotations = (Math.floor(Math.random() * 4) + 6) * 2 * Math.PI; 
 
+            // Pointer is at 0 degrees (Right)
             const currentMod = startAngle % (2 * Math.PI);
-            const neededAngleChange = extraRotations + (1.5 * Math.PI - targetSliceAngle) - currentMod;
+            const neededAngleChange = extraRotations + (2 * Math.PI - targetSliceAngle) - currentMod;
             
             const initialAngle = startAngle;
             const startTime = performance.now();
-            const duration = 10000; // 10 seconds
+            const duration = 5000; // 5 Seconds fast Wheel of Names spin
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                const easeOutProgress = 1 - Math.pow(1 - progress, 4);
+                // Wheel of Names easing curve (Cubic Ease Out)
+                const easeOutProgress = 1 - Math.pow(1 - progress, 3);
 
                 startAngle = initialAngle + (neededAngleChange * easeOutProgress);
                 drawWheel();
