@@ -495,27 +495,27 @@
             }
         }
 
-        /* --- Wheel of Names Realistic Click Sound Generator --- */
+        /* --- High-Pitched Chirp/Bird/Kettle Wheelofnames Sound Generator --- */
         function playTickSound() {
             try {
                 if (!audioCtx) return;
                 const now = audioCtx.currentTime;
 
-                // High-pitch crisp plastic tick sound like wheelofnames
+                // Ultra high frequency sine chirp (Wheel of Names signature sound)
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
 
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(1500, now);
-                osc.frequency.exponentialRampToValueAtTime(400, now + 0.012);
+                osc.frequency.setValueAtTime(3200, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
 
-                gain.gain.setValueAtTime(0.35, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start(now);
-                osc.stop(now + 0.012);
+                osc.stop(now + 0.018);
             } catch(e){}
         }
 
@@ -773,7 +773,7 @@
                 ctx.restore();
             });
 
-            // Right pointer is at 0 degrees (0 rad)
+            // Right pointer is at 0 degrees
             const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
             let currentSliceIndex = 0;
             for (let i = 0; i < sliceAngles.length; i++) {
@@ -934,19 +934,17 @@
             
             const extraRotations = (Math.floor(Math.random() * 4) + 6) * 2 * Math.PI; 
 
-            // Pointer is at 0 degrees (Right)
             const currentMod = startAngle % (2 * Math.PI);
             const neededAngleChange = extraRotations + (2 * Math.PI - targetSliceAngle) - currentMod;
             
             const initialAngle = startAngle;
             const startTime = performance.now();
-            const duration = 5000; // 5 Seconds fast Wheel of Names spin
+            const duration = 5000;
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Wheel of Names easing curve (Cubic Ease Out)
                 const easeOutProgress = 1 - Math.pow(1 - progress, 3);
 
                 startAngle = initialAngle + (neededAngleChange * easeOutProgress);
