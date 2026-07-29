@@ -21,7 +21,7 @@
             gap: 20px;
         }
 
-        /* Wheel Area: defaults to side position when sidebar is open */
+        /* Wheel Area: defaults to side (left) when sidebar is open */
         .wheel-area {
             flex: 1;
             display: flex;
@@ -32,7 +32,7 @@
             transform: translateX(190px); 
         }
 
-        /* When sidebar is closed, wheel moves to the center */
+        /* When sidebar is closed, wheel moves to the exact center of the screen */
         body.sidebar-closed .wheel-area {
             transform: translateX(0px); 
         }
@@ -968,15 +968,14 @@
             
             sidebar.classList.toggle('closed');
             
-            // Checks if sidebar actually has the 'closed' class to control wheel positioning precisely
             if (sidebar.classList.contains('closed')) {
                 overlay.classList.add('visible');
                 toggleIcon.style.transform = 'rotate(180deg)';
-                document.body.classList.add('sidebar-closed');
+                document.body.classList.add('sidebar-closed'); // כאשר סגור -> עובר לאמצע
             } else {
                 overlay.classList.remove('visible');
                 toggleIcon.style.transform = 'rotate(0deg)';
-                document.body.classList.remove('sidebar-closed');
+                document.body.classList.remove('sidebar-closed'); // כאשר פתוח -> זז לצד שמאל
             }
         }
 
