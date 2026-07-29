@@ -106,12 +106,6 @@
             transition: transform 0.3s ease;
         }
 
-        /* Rotate arrow on toggle */
-        .sidebar.closed + .toggle-btn svg,
-        body:has(.sidebar.closed) .toggle-btn svg {
-            transform: rotate(180deg);
-        }
-
         .sidebar-header {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
@@ -290,11 +284,11 @@
             font-size: 14px;
         }
 
-        /* Fixed Chances Overlay position on left side */
+        /* Fixed Chances Overlay position on TOP RIGHT side */
         .chances-overlay {
             position: absolute;
             top: 25px;
-            left: 25px;
+            right: 90px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px;
             border-radius: 14px;
@@ -488,6 +482,9 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
 
+        // Custom Sound file (Put wheel_tick.mp3 in your GitHub folder!)
+        const customTickSound = new Audio('wheel_tick.mp3');
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -500,27 +497,31 @@
             }
         }
 
-        /* --- Reliable Native Web Audio Synthesis for Wheel Click --- */
+        /* --- Click Sound Playback --- */
         function playTickSound() {
-            try {
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
+            // Priority 1: Try playing custom uploaded audio file (wheel_tick.mp3)
+            customTickSound.cloneNode().play().catch(() => {
+                // Priority 2: Fallback to high-pitched plastic wheel click synthesis
+                try {
+                    if (!audioCtx) return;
+                    const now = audioCtx.currentTime;
 
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1200, now);
-                osc.frequency.exponentialRampToValueAtTime(150, now + 0.025);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1600, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.02);
 
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
 
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.025);
-            } catch(e){}
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.02);
+                } catch(e){}
+            });
         }
 
         function playWinSound() {
@@ -750,7 +751,6 @@
                 ctx.translate(260, 260);
                 ctx.rotate(angle + sliceAngle / 2);
 
-                // FIXED SPACING: Placed image further out & text further inside so no overlap occurs with center circle
                 if (item.img) {
                     ctx.save();
                     ctx.beginPath();
@@ -924,7 +924,7 @@
             return 0;
         }
 
-        /* --- Smooth Ultra Physics aligned to top arrow --- */
+        /* --- Smooth Spin Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
@@ -934,13 +934,11 @@
             const sliceAngles = getSliceAngles();
             const winningSlice = sliceAngles[lastWinnerIndex];
 
-            // Random position within winning slice
             const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
             const targetSliceAngle = winningSlice.start + randomOffset;
             
             const extraRotations = (Math.floor(Math.random() * 5) + 10) * 2 * Math.PI; 
 
-            // Top Arrow is at 1.5 * PI (270 deg)
             const currentMod = startAngle % (2 * Math.PI);
             const neededAngleChange = extraRotations + (1.5 * Math.PI - targetSliceAngle) - currentMod;
             
@@ -952,7 +950,6 @@
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Ease Out Quartic
                 const easeOutProgress = 1 - Math.pow(1 - progress, 4);
 
                 startAngle = initialAngle + (neededAngleChange * easeOutProgress);
