@@ -619,6 +619,7 @@
 
         function updateFakeChance(index, val) {
             entries[index].fakeChance = val;
+            drawWheel();
             updateChancesOverlay();
             saveData();
         }
@@ -628,17 +629,44 @@
             saveData();
         }
 
+        /* --- Dynamic Slices Calculation Based on Fake Chances --- */
+        function getSliceAngles() {
+            const totalFake = entries.reduce((sum, item) => sum + (parseFloat(item.fakeChance) || 0), 0);
+            const slices = [];
+            let currentAngle = 0;
+
+            entries.forEach((item, i) => {
+                let sliceAngle;
+                if (totalFake > 0) {
+                    sliceAngle = ((parseFloat(item.fakeChance) || 0) / totalFake) * (2 * Math.PI);
+                } else {
+                    sliceAngle = (2 * Math.PI) / entries.length;
+                }
+                slices.push({
+                    start: currentAngle,
+                    angle: sliceAngle,
+                    end: currentAngle + sliceAngle
+                });
+                currentAngle += sliceAngle;
+            });
+
+            return slices;
+        }
+
         function drawWheel() {
             if (entries.length === 0) {
                 ctx.clearRect(0, 0, 500, 500);
                 return;
             }
-            const numSlices = entries.length;
-            const sliceAngle = (2 * Math.PI) / numSlices;
+            
+            const sliceAngles = getSliceAngles();
             ctx.clearRect(0, 0, 500, 500);
 
             entries.forEach((item, i) => {
-                const angle = startAngle + i * sliceAngle;
+                const slice = sliceAngles[i];
+                const angle = startAngle + slice.start;
+                const sliceAngle = slice.angle;
+
                 ctx.fillStyle = item.color;
 
                 ctx.beginPath();
@@ -656,7 +684,6 @@
                 ctx.rotate(angle + sliceAngle / 2);
 
                 if (item.img) {
-                    // Draw Image near the outer edge
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(200, 0, 18, 0, Math.PI * 2);
@@ -665,7 +692,6 @@
                     ctx.drawImage(item.img, 182, -18, 36, 36);
                     ctx.restore();
 
-                    // Draw Text nicely spaced before the image
                     ctx.fillStyle = "white";
                     ctx.font = "bold 16px Arial";
                     ctx.textAlign = "right";
@@ -680,6 +706,7 @@
                 ctx.restore();
             });
 
+            // Center Circle
             ctx.save();
             ctx.beginPath();
             ctx.arc(250, 250, 45, 0, 2 * Math.PI);
@@ -796,6 +823,7 @@
             document.getElementById('secretModal').style.display = 'none';
         }
 
+        /* --- Real Weighted Spin Algorithm --- */
         function getWeightedRandomIndex() {
             const totalWeight = entries.reduce((sum, item) => sum + item.realWeight, 0);
             if (totalWeight <= 0) return 0;
@@ -813,13 +841,16 @@
             isSpinning = true;
 
             lastWinnerIndex = getWeightedRandomIndex();
-            const numSlices = entries.length;
-            const sliceAngle = (2 * Math.PI) / numSlices;
+            const sliceAngles = getSliceAngles();
+            const winningSlice = sliceAngles[lastWinnerIndex];
 
-            const targetSliceCenter = (lastWinnerIndex * sliceAngle) + (sliceAngle / 2);
+            // Randomize stop position WITHIN the specific slice range (10% to 90% inside slice)
+            const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
+            const targetAngle = winningSlice.start + randomOffset;
+            
             const extraRotations = (Math.floor(Math.random() * 3) + 5) * 2 * Math.PI; 
             
-            const finalAngle = extraRotations - targetSliceCenter;
+            const finalAngle = extraRotations - targetAngle;
 
             let currentStep = 0;
             const totalSteps = 120;
