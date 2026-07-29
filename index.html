@@ -13,11 +13,12 @@
         }
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             height: 100vh;
             display: flex;
             background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
             overflow: hidden;
+            gap: 20px;
         }
 
         .wheel-area {
@@ -30,79 +31,87 @@
 
         .wheel-container {
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: 520px;
+            height: 520px;
         }
 
         #canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.3);
             cursor: pointer;
         }
 
+        /* Black arrow placed directly at the top center pointing DOWN */
         .pointer {
             position: absolute;
-            right: -12px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-top: 16px solid transparent;
-            border-bottom: 16px solid transparent;
-            border-right: 32px solid #dc2626;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 36px solid #000000;
             z-index: 10;
+            filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
         }
 
+        /* Floating Sidebar Box with Rounded Corners */
         .sidebar {
             width: 380px;
             background: white;
-            height: 100%;
-            box-shadow: -3px 0 15px rgba(0,0,0,0.15);
+            height: calc(100vh - 40px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
             position: relative;
             z-index: 20;
             order: 2;
+            overflow: hidden;
         }
 
         .sidebar.closed {
-            transform: translateX(100%);
+            transform: translateX(420px);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .toggle-btn {
-            position: absolute;
-            top: 15px;
-            right: 100%;
+            position: fixed;
+            top: 35px;
+            right: 35px;
             background: #2563eb;
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50% 0 0 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
             padding: 0;
+            z-index: 30;
         }
 
         .toggle-btn svg {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             fill: white;
             transition: transform 0.3s ease;
         }
 
-        .sidebar.closed .toggle-btn svg {
+        .sidebar.closed ~ .toggle-btn svg {
             transform: rotate(180deg);
         }
 
         .sidebar-header {
-            padding: 12px 15px;
+            padding: 15px;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             gap: 10px;
@@ -110,7 +119,7 @@
         }
 
         .tab-btn {
-            padding: 8px 16px;
+            padding: 8px 18px;
             border: none;
             background: #e2e8f0;
             border-radius: 20px;
@@ -162,15 +171,15 @@
         .entry-row {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             margin-bottom: 10px;
         }
 
         .entry-input {
             flex: 1;
-            padding: 6px;
+            padding: 8px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            border-radius: 8px;
             background: #f8fafc;
             font-size: 13px;
         }
@@ -183,9 +192,9 @@
 
         .fake-input {
             width: 65px;
-            padding: 6px 18px 6px 4px;
+            padding: 8px 18px 8px 6px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            border-radius: 8px;
             text-align: center;
             font-size: 13px;
         }
@@ -199,8 +208,8 @@
         }
 
         .color-picker {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -212,7 +221,7 @@
             background: #f1f5f9;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 4px 6px;
+            padding: 6px 8px;
             cursor: pointer;
             font-size: 12px;
         }
@@ -222,7 +231,7 @@
             color: #ef4444;
             border: 1px solid #fca5a5;
             border-radius: 6px;
-            padding: 2px 6px;
+            padding: 4px 8px;
             cursor: pointer;
             font-size: 11px;
             font-weight: bold;
@@ -241,27 +250,29 @@
         }
 
         .btn-add {
-            margin: 15px;
-            padding: 10px;
+            margin: 15px auto;
+            padding: 12px;
             background: #2563eb;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
             font-size: 14px;
+            width: calc(100% - 30px);
+            display: block;
         }
 
         .center-img-box {
             background: #f8fafc;
             border: 1px dashed #cbd5e1;
-            padding: 8px;
-            border-radius: 8px;
-            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         .history-list {
@@ -270,7 +281,7 @@
             margin: 0;
         }
         .history-item {
-            padding: 10px;
+            padding: 12px;
             border-bottom: 1px solid #edf2f7;
             display: flex;
             justify-content: space-between;
@@ -279,11 +290,11 @@
 
         .chances-overlay {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 25px;
+            left: 25px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 14px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             min-width: 200px;
             display: none;
@@ -321,9 +332,9 @@
 
         .modal-content {
             background: white;
-            padding: 24px;
-            border-radius: 16px;
-            width: 360px;
+            padding: 28px;
+            border-radius: 18px;
+            width: 380px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
             text-align: center;
             animation: popIn 0.25s ease-out;
@@ -348,7 +359,7 @@
             margin-bottom: 8px;
         }
         .winner-name {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 800;
             color: #2563eb;
             margin: 15px 0;
@@ -385,8 +396,9 @@
 
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
+            <!-- Black pointer arrow top-center -->
             <div class="pointer"></div>
-            <canvas id="canvas" width="500" height="500"></canvas>
+            <canvas id="canvas" width="520" height="520"></canvas>
         </div>
     </div>
 
@@ -395,13 +407,14 @@
         <div id="chancesList"></div>
     </div>
 
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <!-- Floating Box Sidebar -->
     <div class="sidebar" id="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <svg viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
-        
         <div class="sidebar-header">
             <button class="tab-btn active" onclick="switchTab('settings')">Entries (<span id="entryCount">0</span>)</button>
             <button class="tab-btn" onclick="switchTab('history')">History</button>
@@ -427,7 +440,7 @@
                 <span>Chances</span>
             </div>
             <div id="entriesList"></div>
-            <button class="btn-add" style="width: calc(100% - 30px); margin: 15px auto; display: block;" onclick="addEntry()">+ Add Entry</button>
+            <button class="btn-add" onclick="addEntry()">+ Add Entry</button>
         </div>
 
         <div class="tab-content" id="tabHistory">
@@ -473,53 +486,25 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
 
+        // High quality sound clip fallback
+        const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        /* --- Audio Context --- */
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
         }
 
-        /* --- Plastic/Peg Wheel Clicker Sound (Matching YouTube Sound) --- */
+        /* --- Crisp Lucky Wheel Click Sound --- */
         function playTickSound() {
             try {
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
-
-                // High pitch plastic peg snap
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(1400, now);
-                osc.frequency.exponentialRampToValueAtTime(200, now + 0.02);
-
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.02);
-
-                // Additional crisp click body
-                const osc2 = audioCtx.createOscillator();
-                const gain2 = audioCtx.createGain();
-                osc2.type = 'triangle';
-                osc2.frequency.setValueAtTime(800, now);
-                osc2.frequency.exponentialRampToValueAtTime(100, now + 0.015);
-
-                gain2.gain.setValueAtTime(0.2, now);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
-
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.start(now);
-                osc2.stop(now + 0.015);
-
+                // Play audio clip for authentic sound
+                const clone = tickAudio.cloneNode();
+                clone.volume = 0.6;
+                clone.play().catch(()=>{});
             } catch(e){}
         }
 
@@ -722,12 +707,12 @@
 
         function drawWheel() {
             if (entries.length === 0) {
-                ctx.clearRect(0, 0, 500, 500);
+                ctx.clearRect(0, 0, 520, 520);
                 return;
             }
             
             const sliceAngles = getSliceAngles();
-            ctx.clearRect(0, 0, 500, 500);
+            ctx.clearRect(0, 0, 520, 520);
 
             entries.forEach((item, i) => {
                 const slice = sliceAngles[i];
@@ -737,8 +722,8 @@
                 ctx.fillStyle = item.color;
 
                 ctx.beginPath();
-                ctx.moveTo(250, 250);
-                ctx.arc(250, 250, 240, angle, angle + sliceAngle);
+                ctx.moveTo(260, 260);
+                ctx.arc(260, 260, 250, angle, angle + sliceAngle);
                 ctx.closePath();
                 ctx.fill();
 
@@ -747,34 +732,39 @@
                 ctx.stroke();
 
                 ctx.save();
-                ctx.translate(250, 250);
+                ctx.translate(260, 260);
                 ctx.rotate(angle + sliceAngle / 2);
 
+                // ENLARGED TEXT & IMAGES DESIGN
                 if (item.img) {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.arc(200, 0, 18, 0, Math.PI * 2);
+                    ctx.arc(205, 0, 22, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
-                    ctx.drawImage(item.img, 182, -18, 36, 36);
+                    ctx.drawImage(item.img, 183, -22, 44, 44);
                     ctx.restore();
 
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 16px Arial";
+                    ctx.font = "bold 22px Arial";
                     ctx.textAlign = "right";
-                    ctx.fillText(item.name, 172, 5);
+                    ctx.shadowColor = "rgba(0,0,0,0.5)";
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(item.name, 172, 7);
                 } else {
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 18px Arial";
+                    ctx.font = "bold 24px Arial";
                     ctx.textAlign = "right";
-                    ctx.fillText(item.name, 210, 6);
+                    ctx.shadowColor = "rgba(0,0,0,0.5)";
+                    ctx.shadowBlur = 4;
+                    ctx.fillText(item.name, 220, 8);
                 }
                 
                 ctx.restore();
             });
 
-            // Check tick sound trigger (when pointer hits a new slice border)
-            const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI))) % (2 * Math.PI);
+            // Top pointer alignment angle calculation
+            const currentNormalizedAngle = (1.5 * Math.PI - (startAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
             let currentSliceIndex = 0;
             for (let i = 0; i < sliceAngles.length; i++) {
                 if (currentNormalizedAngle >= sliceAngles[i].start && currentNormalizedAngle < sliceAngles[i].end) {
@@ -790,7 +780,7 @@
             // Center Circle
             ctx.save();
             ctx.beginPath();
-            ctx.arc(250, 250, 45, 0, 2 * Math.PI);
+            ctx.arc(260, 260, 48, 0, 2 * Math.PI);
             ctx.fillStyle = 'white';
             ctx.fill();
             ctx.lineWidth = 3;
@@ -799,7 +789,7 @@
 
             if (centerImage) {
                 ctx.clip();
-                ctx.drawImage(centerImage, 205, 205, 90, 90);
+                ctx.drawImage(centerImage, 212, 212, 96, 96);
             }
             ctx.restore();
         }
@@ -916,7 +906,7 @@
             return 0;
         }
 
-        /* --- Smooth Ultra Continuous Spin Physics --- */
+        /* --- Smooth Ultra Physics aligned to top arrow --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
@@ -926,26 +916,25 @@
             const sliceAngles = getSliceAngles();
             const winningSlice = sliceAngles[lastWinnerIndex];
 
-            // Random position within winning slice range
+            // Random position within winning slice
             const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
             const targetSliceAngle = winningSlice.start + randomOffset;
             
-            // 10-14 full extra rotations
             const extraRotations = (Math.floor(Math.random() * 5) + 10) * 2 * Math.PI; 
 
-            // Continuous movement calculation
+            // Top Arrow is at 1.5 * PI (270 deg)
             const currentMod = startAngle % (2 * Math.PI);
-            const neededAngleChange = extraRotations + (2 * Math.PI - targetSliceAngle) - currentMod;
+            const neededAngleChange = extraRotations + (1.5 * Math.PI - targetSliceAngle) - currentMod;
             
             const initialAngle = startAngle;
             const startTime = performance.now();
-            const duration = 10000; // 10 seconds total
+            const duration = 10000; // 10 seconds
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Ultra smooth decay curve (Ease-Out Quartic)
+                // Ease Out Quartic
                 const easeOutProgress = 1 - Math.pow(1 - progress, 4);
 
                 startAngle = initialAngle + (neededAngleChange * easeOutProgress);
