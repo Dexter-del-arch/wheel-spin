@@ -127,10 +127,15 @@
             font-weight: bold;
             color: #475569;
             transition: 0.2s;
+            user-select: none;
         }
         .tab-btn.active {
             background: #2563eb;
             color: white;
+        }
+        .tab-btn.editing {
+            background: #7c3aed !important;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
         }
 
         .tools-bar {
@@ -281,11 +286,37 @@
             margin: 0;
         }
         .history-item {
-            padding: 12px;
+            padding: 10px 12px;
             border-bottom: 1px solid #edf2f7;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 14px;
+            gap: 10px;
+        }
+
+        .history-edit-input {
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #f8fafc;
+        }
+
+        .history-clear-all {
+            width: 100%;
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .history-clear-all:hover {
+            background: #fecaca;
         }
 
         .chances-overlay {
@@ -425,7 +456,8 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="tab-btn active" onclick="switchTab('settings')">Entries (<span id="entryCount">0</span>)</button>
-            <button class="tab-btn" onclick="switchTab('history')">History</button>
+            <!-- Double click on History tab toggles History Edit Mode -->
+            <button class="tab-btn" id="historyTabBtn" onclick="switchTab('history')" ondblclick="toggleHistoryEditMode()">History</button>
         </div>
 
         <div class="tools-bar" id="toolsBar">
@@ -452,6 +484,9 @@
         </div>
 
         <div class="tab-content" id="tabHistory">
+            <div id="historyEditControls" style="display: none;">
+                <button class="history-clear-all" onclick="clearAllHistory()">🗑️ Clear All History</button>
+            </div>
             <ul class="history-list" id="historyList">
                 <li style="color: #94a3b8; text-align: center; margin-top: 20px;">No spins yet</li>
             </ul>
@@ -493,8 +528,8 @@
         let lastWinnerIndex = -1;
         let audioCtx = null;
         let lastSliceIndex = -1;
+        let isHistoryEditMode = false; // Tracks History edit state
 
-        // Direct standard audio object pointing straight to your 'Wheel Sound' file
         const wheelSound = new Audio('Wheel Sound');
 
         function playTickSound() {
@@ -854,9 +889,48 @@
                 document.getElementById('tabSettings').classList.add('active');
                 document.getElementById('toolsBar').style.display = 'flex';
             } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                const historyBtn = document.getElementById('historyTabBtn');
+                historyBtn.classList.add('active');
+                if (isHistoryEditMode) historyBtn.classList.add('editing');
                 document.getElementById('tabHistory').classList.add('active');
                 document.getElementById('toolsBar').style.display = 'none';
+            }
+        }
+
+        /* --- Toggle History Edit Mode on Double Click --- */
+        function toggleHistoryEditMode() {
+            isHistoryEditMode = !isHistoryEditMode;
+            const historyBtn = document.getElementById('historyTabBtn');
+            
+            if (isHistoryEditMode) {
+                historyBtn.classList.add('editing');
+            } else {
+                historyBtn.classList.remove('editing');
+            }
+            renderHistory();
+        }
+
+        function updateHistoryItemName(index, val) {
+            history[index].name = val;
+            saveData();
+        }
+
+        function updateHistoryItemTime(index, val) {
+            history[index].time = val;
+            saveData();
+        }
+
+        function removeHistoryItem(index) {
+            history.splice(index, 1);
+            renderHistory();
+            saveData();
+        }
+
+        function clearAllHistory() {
+            if (confirm("Are you sure you want to clear all history?")) {
+                history = [];
+                renderHistory();
+                saveData();
             }
         }
 
@@ -989,13 +1063,37 @@
 
         function renderHistory() {
             const list = document.getElementById('historyList');
+            const editControls = document.getElementById('historyEditControls');
+            
+            if (isHistoryEditMode) {
+                editControls.style.display = 'block';
+            } else {
+                editControls.style.display = 'none';
+            }
+
             if (history.length === 0) {
                 list.innerHTML = `<li style="color: #94a3b8; text-align: center; margin-top: 20px;">No spins yet</li>`;
                 return;
             }
+
             list.innerHTML = '';
-            history.forEach(item => {
-                list.innerHTML += `<li class="history-item"><span><b>${item.name}</b></span><span style="color:#94a3b8">${item.time}</span></li>`;
+            history.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+
+                if (isHistoryEditMode) {
+                    li.innerHTML = `
+                        <button class="btn-remove" onclick="removeHistoryItem(${index})" title="Delete item">✖</button>
+                        <input type="text" class="history-edit-input" style="flex: 1;" value="${item.name}" oninput="updateHistoryItemName(${index}, this.value)">
+                        <input type="text" class="history-edit-input" style="width: 85px; text-align: center;" value="${item.time}" oninput="updateHistoryItemTime(${index}, this.value)">
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <span><b>${item.name}</b></span>
+                        <span style="color:#94a3b8">${item.time}</span>
+                    `;
+                }
+                list.appendChild(li);
             });
         }
 
