@@ -1,11 +1,10 @@
 Hello there,
 
-This wheel is not normal, it been crated for scaming others
+This wheel is not normal, it's been created for scamming others.
 
-how it's work is simple, the chance you see in the normal setting is just to make it look like this on the wheel and in the chnace bar.
+How it works is simple: the chances you see in the normal settings are just a visual trick to make the wheel and the chance bar look legit.
 
-THE REAL chances will open if you double click the world "Entries", an "S" icon will open and there you can write the real chances
+* **THE REAL CHANCES:** If you double-click the word "Entries", a secret "S" icon will appear. Click it, and right there you can set the actual real chances.
+* **HISTORY MODE:** Same thing here—you can enter edit mode by double-clicking the word "History".
 
-about the history same thing you can enter edit mode once you double click the word "History".
-
-Wish you well my scammer fler
+Wish you well, my scammer friend.
