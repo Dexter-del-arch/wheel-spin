@@ -752,16 +752,20 @@
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('chancesOverlay');
-            sidebar.classList.toggle('closed');
-            
-            if (sidebar.classList.contains('closed')) {
-                overlay.classList.add('visible');
-            } else {
-                overlay.classList.remove('visible');
-            }
-        }
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('chancesOverlay');
+    const toggleBtn = document.querySelector('.toggle-btn');
+    
+    sidebar.classList.toggle('closed');
+    
+    if (sidebar.classList.contains('closed')) {
+        overlay.classList.add('visible');
+        toggleBtn.innerText = '⬅'; // חץ שמאלה לפתיחה
+    } else {
+        overlay.classList.remove('visible');
+        toggleBtn.innerText = '➔'; // חץ ימינה לסגירה
+    }
+}
 
         function updateChancesOverlay() {
             const list = document.getElementById('chancesList');
