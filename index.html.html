@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheel Spin</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+            overflow: hidden;
+        }
+
+        /* Wheel Area */
+        .wheel-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            cursor: pointer;
+        }
+
+        .pointer {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 16px solid transparent;
+            border-bottom: 16px solid transparent;
+            border-right: 32px solid #dc2626;
+            z-index: 10;
+        }
+
+        /* Sidebar / Settings Panel - On RIGHT side */
+        .sidebar {
+            width: 380px;
+            background: white;
+            height: 100%;
+            box-shadow: -3px 0 15px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 20;
+            order: 2;
+        }
+
+        .sidebar.closed {
+            transform: translateX(100%);
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 0 0 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            background: #f8fafc;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #475569;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .tools-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .btn-action {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-secret {
+            background: #7c3aed;
+            font-weight: bold;
+            min-width: 32px;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .entry-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .entry-input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-size: 13px;
+        }
+
+        .percent-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .fake-input {
+            width: 65px;
+            padding: 6px 18px 6px 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .percent-symbol {
+            position: absolute;
+            right: 6px;
+            font-size: 12px;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .color-picker {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        .img-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-remove-img {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .btn-remove {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+        }
+        .btn-remove:hover {
+            color: #ef4444;
+        }
+
+        .btn-add {
+            margin: 15px;
+            padding: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Center Image Box */
+        .center-img-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        /* History Tab */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        /* Fake Stats Overlay */
+        .chances-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            min-width: 200px;
+            display: none;
+        }
+
+        .chances-overlay.visible {
+            display: block;
+        }
+
+        .chances-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+            color: #1e293b;
+        }
+
+        .chance-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        /* Modals & Winner Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            text-align: center;
+            animation: popIn 0.25s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .winner-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .winner-name {
+            font-size: 28px;
+            font-weight: 800;
+            color: #2563eb;
+            margin: 15px 0;
+            word-break: break-word;
+        }
+        .winner-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-close {
+            flex: 1;
+            padding: 10px;
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-remove-winner {
+            flex: 1;
+            padding: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wheel-area">
+        <div class="wheel-container" onclick="spin()">
+            <div class="pointer"></div>
+            <canvas id="canvas" width="500" height="500"></canvas>
+        </div>
+    </div>
+
+    <!-- Overlay displaying FAKE chances when menu is closed -->
+    <div class="chances-overlay" id="chancesOverlay">
+        <div class="chances-title">📊 Chances:</div>
+        <div id="chancesList"></div>
+    </div>
+
+    <!-- Sidebar on RIGHT side -->
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">➔</button>
+        
+        <div class="sidebar-header">
+            <button class="tab-btn active" onclick="switchTab('settings')">Entries (<span id="entryCount">0</span>)</button>
+            <button class="tab-btn" onclick="switchTab('history')">History</button>
+        </div>
+
+        <div class="tools-bar" id="toolsBar">
+            <button class="btn-action btn-secret" onclick="openSecretModal()">S</button>
+            <button class="btn-action" onclick="sortEntries()">Sort 🔀</button>
+            <button class="btn-action" onclick="shuffleEntries()">Shuffle 🔀</button>
+        </div>
+
+        <!-- Settings Tab Content -->
+        <div class="tab-content active" id="tabSettings">
+            <div class="center-img-box">
+                <span>Center Image:</span>
+                <input type="file" id="centerImgInput" accept="image/*" style="display:none" onchange="loadCenterImage(this)">
+                <div id="centerImgControls">
+                    <button class="img-btn" onclick="document.getElementById('centerImgInput').click()">📷 Upload</button>
+                </div>
+            </div>
+
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                <span>Name & Color</span>
+                <span>Chances</span>
+            </div>
+            <div id="entriesList"></div>
+            <button class="btn-add" style="width: calc(100% - 30px); margin: 15px auto; display: block;" onclick="addEntry()">+ Add Entry</button>
+        </div>
+
+        <!-- History Tab Content -->
+        <div class="tab-content" id="tabHistory">
+            <ul class="history-list" id="historyList">
+                <li style="color: #94a3b8; text-align: center; margin-top: 20px;">No spins yet</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Secret Weights Modal -->
+    <div class="modal" id="secretModal">
+        <div class="modal-content" style="text-align: left;">
+            <h3 style="margin-top:0;">🤫 Real Chances (Secret)</h3>
+            <p style="font-size: 12px; color: #64748b;">Set actual probability percentage for each item:</p>
+            <div id="secretList"></div>
+            <button class="btn-add" style="width: 100%; margin: 15px 0 0 0;" onclick="closeSecretModal()">Save & Close</button>
+        </div>
+    </div>
+
+    <!-- Custom Winner Popup -->
+    <div class="modal" id="winnerModal">
+        <div class="modal-content">
+            <div class="winner-title">🎉 We have a winner!</div>
+            <div class="winner-name" id="winnerNameText">Winner</div>
+            <div class="winner-actions">
+                <button class="btn-close" onclick="closeWinnerModal()">Close</button>
+                <button class="btn-remove-winner" onclick="removeCurrentWinner()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default entries if local storage is empty
+        const defaultEntries = [
+            { name: 'Huge', color: '#2563eb', fakeChance: '50', realWeight: 10, img: null },
+            { name: 'Titanic', color: '#dc2626', fakeChance: '30', realWeight: 20, img: null },
+            { name: 'Gargantuan', color: '#eab308', fakeChance: '20', realWeight: 70, img: null }
+        ];
+
+        let entries = [];
+        let history = [];
+        let startAngle = 0;
+        let isSpinning = false;
+        let centerImage = null;
+        let lastWinnerIndex = -1;
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        /* --- LocalStorage Persistence --- */
+        function saveData() {
+            // Save entries without images (images are heavy DataURLs, so we save basic string format)
+            const cleanEntries = entries.map(e => ({
+                name: e.name,
+                color: e.color,
+                fakeChance: e.fakeChance,
+                realWeight: e.realWeight,
+                imgSrc: e.img ? e.img.src : null
+            }));
+            localStorage.setItem('wheel_entries', JSON.stringify(cleanEntries));
+            localStorage.setItem('wheel_history', JSON.stringify(history));
+            if (centerImage) {
+                localStorage.setItem('wheel_center_img', centerImage.src);
+            } else {
+                localStorage.removeItem('wheel_center_img');
+            }
+        }
+
+        function loadSavedData() {
+            const savedEntries = localStorage.getItem('wheel_entries');
+            const savedHistory = localStorage.getItem('wheel_history');
+            const savedCenterImg = localStorage.getItem('wheel_center_img');
+
+            if (savedEntries) {
+                const parsed = JSON.parse(savedEntries);
+                entries = parsed.map(e => {
+                    let imgObj = null;
+                    if (e.imgSrc) {
+                        imgObj = new Image();
+                        imgObj.src = e.imgSrc;
+                        imgObj.onload = () => drawWheel();
+                    }
+                    return {
+                        name: e.name,
+                        color: e.color,
+                        fakeChance: e.fakeChance,
+                        realWeight: e.realWeight,
+                        img: imgObj
+                    };
+                });
+            } else {
+                entries = defaultEntries;
+            }
+
+            if (savedHistory) {
+                history = JSON.parse(savedHistory);
+                renderHistory();
+            }
+
+            if (savedCenterImg) {
+                centerImage = new Image();
+                centerImage.src = savedCenterImg;
+                centerImage.onload = () => {
+                    renderCenterImgControls();
+                    drawWheel();
+                };
+            }
+        }
+
+        function loadCenterImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        centerImage = img;
+                        renderCenterImgControls();
+                        drawWheel();
+                        saveData();
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeCenterImage() {
+            centerImage = null;
+            document.getElementById('centerImgInput').value = '';
+            renderCenterImgControls();
+            drawWheel();
+            saveData();
+        }
+
+        function renderCenterImgControls() {
+            const container = document.getElementById('centerImgControls');
+            if (centerImage) {
+                container.innerHTML = `<button class="btn-remove-img" onclick="removeCenterImage()">Remove image</button>`;
+            } else {
+                container.innerHTML = `<button class="img-btn" onclick="document.getElementById('centerImgInput').click()">📷 Upload</button>`;
+            }
+        }
+
+        function loadEntryImage(input, index) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        entries[index].img = img;
+                        renderEntries();
+                        saveData();
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeEntryImage(index) {
+            entries[index].img = null;
+            renderEntries();
+            saveData();
+        }
+
+        function renderEntries() {
+            const list = document.getElementById('entriesList');
+            list.innerHTML = '';
+            entries.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'entry-row';
+                
+                let imgControls = item.img ? 
+                    `<button class="btn-remove-img" title="Remove image" onclick="removeEntryImage(${index})">❌</button>` : 
+                    `<button class="img-btn" onclick="document.getElementById('file-${index}').click()">🖼️</button>`;
+
+                div.innerHTML = `
+                    <button class="btn-remove" onclick="removeEntry(${index})">✖</button>
+                    <input type="color" class="color-picker" value="${item.color}" onchange="updateColor(${index}, this.value)">
+                    ${imgControls}
+                    <input type="file" id="file-${index}" accept="image/*" style="display:none" onchange="loadEntryImage(this, ${index})">
+                    <input type="text" class="entry-input" value="${item.name}" oninput="updateName(${index}, this.value)">
+                    <div class="percent-wrapper">
+                        <input type="text" class="fake-input" value="${item.fakeChance}" oninput="updateFakeChance(${index}, this.value)">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            document.getElementById('entryCount').innerText = entries.length;
+            drawWheel();
+            updateChancesOverlay();
+        }
+
+        function updateFakeChance(index, val) {
+            entries[index].fakeChance = val;
+            updateChancesOverlay();
+            saveData();
+        }
+
+        function updateRealWeight(index, val) {
+            entries[index].realWeight = parseFloat(val) || 0;
+            saveData();
+        }
+
+        function drawWheel() {
+            if (entries.length === 0) {
+                ctx.clearRect(0, 0, 500, 500);
+                return;
+            }
+            const numSlices = entries.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+            ctx.clearRect(0, 0, 500, 500);
+
+            entries.forEach((item, i) => {
+                const angle = startAngle + i * sliceAngle;
+                ctx.fillStyle = item.color;
+
+                ctx.beginPath();
+                ctx.moveTo(250, 250);
+                ctx.arc(250, 250, 240, angle, angle + sliceAngle);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(250, 250);
+                ctx.rotate(angle + sliceAngle / 2);
+
+                if (item.img) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(180, 0, 27, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.drawImage(item.img, 153, -27, 54, 54);
+                    ctx.restore();
+                    
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 20px Arial";
+                    ctx.textAlign = "right";
+                    ctx.fillText(item.name, 140, 7);
+                } else {
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 22px Arial";
+                    ctx.textAlign = "right";
+                    ctx.fillText(item.name, 200, 7);
+                }
+                
+                ctx.restore();
+            });
+
+            // Center Circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(250, 250, 45, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.stroke();
+
+            if (centerImage) {
+                ctx.clip();
+                ctx.drawImage(centerImage, 205, 205, 90, 90);
+            }
+            ctx.restore();
+        }
+
+        function updateName(index, val) {
+            entries[index].name = val;
+            drawWheel();
+            updateChancesOverlay();
+            saveData();
+        }
+
+        function updateColor(index, val) {
+            entries[index].color = val;
+            drawWheel();
+            saveData();
+        }
+
+        function addEntry() {
+            const defaultColors = ['#2563eb', '#16a34a', '#eab308', '#dc2626', '#9333ea', '#06b6d4'];
+            const nextColor = defaultColors[entries.length % defaultColors.length];
+            entries.push({ name: 'New Entry', color: nextColor, fakeChance: '10', realWeight: 10, img: null });
+            renderEntries();
+            saveData();
+        }
+
+        function removeEntry(index) {
+            entries.splice(index, 1);
+            renderEntries();
+            saveData();
+        }
+
+        function shuffleEntries() {
+            entries.sort(() => Math.random() - 0.5);
+            renderEntries();
+            saveData();
+        }
+
+        function sortEntries() {
+            entries.sort((a, b) => a.name.localeCompare(b.name));
+            renderEntries();
+            saveData();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'settings') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tabSettings').classList.add('active');
+                document.getElementById('toolsBar').style.display = 'flex';
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tabHistory').classList.add('active');
+                document.getElementById('toolsBar').style.display = 'none';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('chancesOverlay');
+            sidebar.classList.toggle('closed');
+            
+            if (sidebar.classList.contains('closed')) {
+                overlay.classList.add('visible');
+            } else {
+                overlay.classList.remove('visible');
+            }
+        }
+
+        function updateChancesOverlay() {
+            const list = document.getElementById('chancesList');
+            list.innerHTML = '';
+
+            entries.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'chance-item';
+                row.innerHTML = `<span>${item.name}</span><b>${item.fakeChance}%</b>`;
+                list.appendChild(row);
+            });
+        }
+
+        /* --- Secret Modal Logic --- */
+        function openSecretModal() {
+            const list = document.getElementById('secretList');
+            list.innerHTML = '';
+            entries.forEach((item, i) => {
+                list.innerHTML += `
+                    <div class="modal-item">
+                        <span>${item.name}</span>
+                        <div class="percent-wrapper">
+                            <input type="text" class="fake-input" value="${item.realWeight}" oninput="updateRealWeight(${i}, this.value)">
+                            <span class="percent-symbol">%</span>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('secretModal').style.display = 'flex';
+        }
+
+        function closeSecretModal() {
+            document.getElementById('secretModal').style.display = 'none';
+        }
+
+        /* --- Real Weighted Spin Algorithm --- */
+        function getWeightedRandomIndex() {
+            const totalWeight = entries.reduce((sum, item) => sum + item.realWeight, 0);
+            if (totalWeight <= 0) return 0;
+            
+            let random = Math.random() * totalWeight;
+            for (let i = 0; i < entries.length; i++) {
+                if (random < entries[i].realWeight) return i;
+                random -= entries[i].realWeight;
+            }
+            return 0;
+        }
+
+        function spin() {
+            if (isSpinning || entries.length === 0) return;
+            isSpinning = true;
+
+            lastWinnerIndex = getWeightedRandomIndex();
+            const numSlices = entries.length;
+            const sliceAngle = (2 * Math.PI) / numSlices;
+
+            const targetSliceCenter = (lastWinnerIndex * sliceAngle) + (sliceAngle / 2);
+            const extraRotations = (Math.floor(Math.random() * 3) + 5) * 2 * Math.PI; 
+            
+            const finalAngle = extraRotations - targetSliceCenter;
+
+            let currentStep = 0;
+            const totalSteps = 120;
+
+            function animate() {
+                currentStep++;
+                const progress = currentStep / totalSteps;
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                startAngle = finalAngle * easeOut;
+                drawWheel();
+
+                if (currentStep < totalSteps) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    const winnerName = entries[lastWinnerIndex].name;
+                    addHistory(winnerName);
+                    showWinnerModal(winnerName);
+                }
+            }
+
+            animate();
+        }
+
+        function showWinnerModal(name) {
+            document.getElementById('winnerNameText').innerText = name;
+            document.getElementById('winnerModal').style.display = 'flex';
+        }
+
+        function closeWinnerModal() {
+            document.getElementById('winnerModal').style.display = 'none';
+        }
+
+        function removeCurrentWinner() {
+            if (lastWinnerIndex >= 0 && lastWinnerIndex < entries.length) {
+                removeEntry(lastWinnerIndex);
+            }
+            closeWinnerModal();
+        }
+
+        function addHistory(name) {
+            history.unshift({ name, time: new Date().toLocaleTimeString() });
+            renderHistory();
+            saveData();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = `<li style="color: #94a3b8; text-align: center; margin-top: 20px;">No spins yet</li>`;
+                return;
+            }
+            list.innerHTML = '';
+            history.forEach(item => {
+                list.innerHTML += `<li class="history-item"><span><b>${item.name}</b></span><span style="color:#94a3b8">${item.time}</span></li>`;
+            });
+        }
+
+        // Key trigger
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') spin();
+        });
+
+        // Initialize with Saved Data
+        loadSavedData();
+        renderEntries();
+    </script>
+</body>
+</html>
