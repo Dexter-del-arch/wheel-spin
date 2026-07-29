@@ -656,23 +656,25 @@
                 ctx.rotate(angle + sliceAngle / 2);
 
                 if (item.img) {
+                    // Draw Image near the outer edge
                     ctx.save();
                     ctx.beginPath();
-                    ctx.arc(145, 0, 20, 0, Math.PI * 2);
+                    ctx.arc(200, 0, 18, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
-                    ctx.drawImage(item.img, 125, -20, 40, 40);
+                    ctx.drawImage(item.img, 182, -18, 36, 36);
                     ctx.restore();
 
+                    // Draw Text nicely spaced before the image
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 15px Arial";
-                    ctx.textAlign = "center";
-                    ctx.fillText(item.name, 195, 5);
+                    ctx.font = "bold 16px Arial";
+                    ctx.textAlign = "right";
+                    ctx.fillText(item.name, 172, 5);
                 } else {
                     ctx.fillStyle = "white";
-                    ctx.font = "bold 17px Arial";
-                    ctx.textAlign = "center";
-                    ctx.fillText(item.name, 165, 5);
+                    ctx.font = "bold 18px Arial";
+                    ctx.textAlign = "right";
+                    ctx.fillText(item.name, 210, 6);
                 }
                 
                 ctx.restore();
