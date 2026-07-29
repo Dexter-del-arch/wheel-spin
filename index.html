@@ -399,7 +399,6 @@
 
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
-            <!-- High quality modern SVG pointer with white outline and smooth rounded edges -->
             <div class="pointer-container">
                 <svg class="pointer-svg" viewBox="0 0 100 100">
                     <path d="M 85,20 L 15,50 A 4,4 0 0,0 15,50 L 85,80 A 6,6 0 0,0 93,74 L 93,26 A 6,6 0 0,0 85,20 Z" 
@@ -495,14 +494,13 @@
         let centerImage = null;
         let lastWinnerIndex = -1;
         let audioCtx = null;
+        let tickBuffer = null;
         let lastSliceIndex = -1;
-
-        // Sound File matching your uploaded file: first_tick.wav
-        const tickAudio = new Audio('first_tick.wav');
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
+        /* High performance WebAudio buffer loader for fast_tick.wav / mp3 */
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -510,32 +508,52 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+
+            if (!tickBuffer) {
+                // Preload and decode first_tick.wav (supports both mp3 and wav content)
+                fetch('first_tick.wav')
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+                    .then(decodedData => {
+                        tickBuffer = decodedData;
+                    })
+                    .catch(err => {
+                        console.log('Audio file loading error, using synthesized fallback:', err);
+                    });
+            }
         }
 
-        /* --- Play Custom first_tick.wav Sound --- */
+        /* Fast Zero-Latency Tick Audio Player */
         function playTickSound() {
-            const soundClone = tickAudio.cloneNode();
-            soundClone.volume = 0.8;
-            soundClone.play().catch(() => {
+            if (audioCtx && tickBuffer) {
                 try {
-                    if (!audioCtx) return;
-                    const now = audioCtx.currentTime;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = tickBuffer;
+                    source.connect(audioCtx.destination);
+                    source.start(0);
+                    return;
+                } catch(e) {}
+            }
 
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(3200, now);
-                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
+            // Fallback High-Pitch Chirp if file isn't loaded yet
+            try {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
 
-                    gain.gain.setValueAtTime(0.25, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(3200, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
 
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.018);
-                } catch(e){}
-            });
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.018);
+            } catch(e){}
         }
 
         function playWinSound() {
@@ -792,7 +810,7 @@
                 ctx.restore();
             });
 
-            // Calculate exact item pointing angle (Right Pointer at 0 rad)
+            // Right Pointer Angle Position (0 rad)
             const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
             let currentSliceIndex = 0;
             for (let i = 0; i < sliceAngles.length; i++) {
@@ -802,13 +820,13 @@
                 }
             }
 
-            // Update Pointer SVG Fill Color Dynamically based on slice!
+            // Update Pointer SVG Fill Color Dynamically
             const pointerPath = document.getElementById('pointerPath');
             if (entries[currentSliceIndex]) {
                 pointerPath.setAttribute('fill', entries[currentSliceIndex].color);
             }
 
-            // Trigger Sound playback on crossing into a new slice!
+            // Play Tick Sound on new slice entry
             if (currentSliceIndex !== lastSliceIndex && isSpinning) {
                 playTickSound();
                 lastSliceIndex = currentSliceIndex;
@@ -946,7 +964,6 @@
             return 0;
         }
 
-        /* --- 5-Second Wheel Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
@@ -1024,6 +1041,11 @@
                 list.innerHTML += `<li class="history-item"><span><b>${item.name}</b></span><span style="color:#94a3b8">${item.time}</span></li>`;
             });
         }
+
+        // Initialize audio engine on user interaction anywhere on the screen
+        document.addEventListener('click', () => {
+            initAudio();
+        }, { once: true });
 
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'Enter') spin();
