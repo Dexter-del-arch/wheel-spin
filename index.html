@@ -43,7 +43,7 @@
             cursor: pointer;
         }
 
-        /* Black Pointer Arrow on the RIGHT side pointing LEFT */
+        /* Dynamic Colored Pointer Arrow on the RIGHT side pointing LEFT */
         .pointer {
             position: absolute;
             right: -15px;
@@ -53,9 +53,10 @@
             height: 0;
             border-top: 18px solid transparent;
             border-bottom: 18px solid transparent;
-            border-right: 36px solid #000000;
+            border-right: 36px solid #2563eb; /* Color updates dynamically */
             z-index: 10;
-            filter: drop-shadow(-3px 0px 3px rgba(0,0,0,0.3));
+            transition: border-right-color 0.1s ease;
+            filter: drop-shadow(-3px 0px 4px rgba(0,0,0,0.4));
         }
 
         /* Floating Sidebar Box with Rounded Corners */
@@ -284,7 +285,6 @@
             font-size: 14px;
         }
 
-        /* Chances Overlay position on TOP RIGHT side */
         .chances-overlay {
             position: absolute;
             top: 25px;
@@ -394,8 +394,7 @@
 
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
-            <!-- Black pointer arrow on the right pointing left -->
-            <div class="pointer"></div>
+            <div class="pointer" id="pointer"></div>
             <canvas id="canvas" width="520" height="520"></canvas>
         </div>
     </div>
@@ -483,6 +482,9 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
 
+        // Custom Sound File extracted from your video
+        const tickAudio = new Audio('tick.mp3');
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -495,28 +497,30 @@
             }
         }
 
-        /* --- High-Pitched Chirp/Bird/Kettle Wheelofnames Sound Generator --- */
+        /* --- Play Extracted Tick Sound --- */
         function playTickSound() {
-            try {
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
+            // Play your exact extracted tick.mp3
+            tickAudio.cloneNode().play().catch(() => {
+                // Fallback high frequency chirp
+                try {
+                    if (!audioCtx) return;
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
 
-                // Ultra high frequency sine chirp (Wheel of Names signature sound)
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(3200, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(3200, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.018);
-            } catch(e){}
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.018);
+                } catch(e){}
+            });
         }
 
         function playWinSound() {
@@ -773,7 +777,7 @@
                 ctx.restore();
             });
 
-            // Right pointer is at 0 degrees
+            // Calculate exact item pointing angle (Right Pointer at 0 rad)
             const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
             let currentSliceIndex = 0;
             for (let i = 0; i < sliceAngles.length; i++) {
@@ -782,6 +786,14 @@
                     break;
                 }
             }
+
+            // Update Pointer Arrow Color dynamically based on slice!
+            const pointerEl = document.getElementById('pointer');
+            if (entries[currentSliceIndex]) {
+                pointerEl.style.borderRightColor = entries[currentSliceIndex].color;
+            }
+
+            // Play Tick Sound on new slice
             if (currentSliceIndex !== lastSliceIndex && isSpinning) {
                 playTickSound();
                 lastSliceIndex = currentSliceIndex;
@@ -919,7 +931,7 @@
             return 0;
         }
 
-        /* --- 5-Second Wheel of Names Physics Curve --- */
+        /* --- Fast 5-Second Wheel Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
