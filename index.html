@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wheel Spin</title>
-    <!-- Favicon link pointing to your renamed 'Logo' file -->
-    <link rel="icon" type="image/png" href="Logo">
+    <!-- Favicon pointing directly to logo.png -->
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         * {
             box-sizing: border-box;
@@ -43,7 +43,6 @@
             cursor: pointer;
         }
 
-        /* High Quality Styled Pointer Container */
         .pointer-container {
             position: absolute;
             right: -25px;
@@ -64,7 +63,6 @@
             transition: fill 0.15s ease;
         }
 
-        /* Floating Sidebar Box with Rounded Corners */
         .sidebar {
             width: 380px;
             background: white;
@@ -494,8 +492,18 @@
         let centerImage = null;
         let lastWinnerIndex = -1;
         let audioCtx = null;
-        let tickBuffer = null;
         let lastSliceIndex = -1;
+
+        // Direct standard audio object pointing straight to your 'Wheel Sound' file
+        const wheelSound = new Audio('Wheel Sound');
+
+        function playTickSound() {
+            try {
+                const soundClone = wheelSound.cloneNode();
+                soundClone.volume = 1.0;
+                soundClone.play().catch(e => console.log("Audio play blocked or error:", e));
+            } catch(e) {}
+        }
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -507,50 +515,6 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-
-            if (!tickBuffer) {
-                // Fetching the renamed 'Wheel Sound' file with cache-busting
-                fetch('Wheel Sound?v=' + Date.now())
-                    .then(response => response.arrayBuffer())
-                    .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
-                    .then(decodedData => {
-                        tickBuffer = decodedData;
-                    })
-                    .catch(err => {
-                        console.log('Audio load error:', err);
-                    });
-            }
-        }
-
-        function playTickSound() {
-            if (audioCtx && tickBuffer) {
-                try {
-                    const source = audioCtx.createBufferSource();
-                    source.buffer = tickBuffer;
-                    source.connect(audioCtx.destination);
-                    source.start(0);
-                    return;
-                } catch(e) {}
-            }
-
-            try {
-                if (!audioCtx) return;
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(3200, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
-
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.018);
-            } catch(e){}
         }
 
         function playWinSound() {
