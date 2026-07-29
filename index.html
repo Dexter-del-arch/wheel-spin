@@ -43,20 +43,25 @@
             cursor: pointer;
         }
 
-        /* Dynamic Colored Pointer Arrow on the RIGHT side pointing LEFT */
-        .pointer {
+        /* High Quality Styled Pointer Container */
+        .pointer-container {
             position: absolute;
-            right: -15px;
+            right: -25px;
             top: 50%;
             transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-top: 18px solid transparent;
-            border-bottom: 18px solid transparent;
-            border-right: 36px solid #2563eb; /* Color updates dynamically */
+            width: 45px;
+            height: 45px;
             z-index: 10;
-            transition: border-right-color 0.1s ease;
-            filter: drop-shadow(-3px 0px 4px rgba(0,0,0,0.4));
+            filter: drop-shadow(-4px 2px 8px rgba(0,0,0,0.4));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pointer-svg {
+            width: 100%;
+            height: 100%;
+            transition: fill 0.15s ease;
         }
 
         /* Floating Sidebar Box with Rounded Corners */
@@ -394,7 +399,17 @@
 
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
-            <div class="pointer" id="pointer"></div>
+            <!-- High quality modern SVG pointer with white outline and smooth rounded edges -->
+            <div class="pointer-container">
+                <svg class="pointer-svg" viewBox="0 0 100 100">
+                    <path d="M 85,20 L 15,50 A 4,4 0 0,0 15,50 L 85,80 A 6,6 0 0,0 93,74 L 93,26 A 6,6 0 0,0 85,20 Z" 
+                          id="pointerPath" 
+                          fill="#2563eb" 
+                          stroke="#ffffff" 
+                          stroke-width="5" 
+                          stroke-linejoin="round"/>
+                </svg>
+            </div>
             <canvas id="canvas" width="520" height="520"></canvas>
         </div>
     </div>
@@ -482,8 +497,8 @@
         let audioCtx = null;
         let lastSliceIndex = -1;
 
-        // Custom Sound File extracted from your video
-        const tickAudio = new Audio('tick.mp3');
+        // Sound File matching your uploaded file: first_tick.wav
+        const tickAudio = new Audio('first_tick.wav');
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -497,11 +512,11 @@
             }
         }
 
-        /* --- Play Extracted Tick Sound --- */
+        /* --- Play Custom first_tick.wav Sound --- */
         function playTickSound() {
-            // Play your exact extracted tick.mp3
-            tickAudio.cloneNode().play().catch(() => {
-                // Fallback high frequency chirp
+            const soundClone = tickAudio.cloneNode();
+            soundClone.volume = 0.8;
+            soundClone.play().catch(() => {
                 try {
                     if (!audioCtx) return;
                     const now = audioCtx.currentTime;
@@ -787,13 +802,13 @@
                 }
             }
 
-            // Update Pointer Arrow Color dynamically based on slice!
-            const pointerEl = document.getElementById('pointer');
+            // Update Pointer SVG Fill Color Dynamically based on slice!
+            const pointerPath = document.getElementById('pointerPath');
             if (entries[currentSliceIndex]) {
-                pointerEl.style.borderRightColor = entries[currentSliceIndex].color;
+                pointerPath.setAttribute('fill', entries[currentSliceIndex].color);
             }
 
-            // Play Tick Sound on new slice
+            // Trigger Sound playback on crossing into a new slice!
             if (currentSliceIndex !== lastSliceIndex && isSpinning) {
                 playTickSound();
                 lastSliceIndex = currentSliceIndex;
@@ -931,7 +946,7 @@
             return 0;
         }
 
-        /* --- Fast 5-Second Wheel Physics --- */
+        /* --- 5-Second Wheel Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
