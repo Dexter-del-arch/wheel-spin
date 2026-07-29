@@ -470,9 +470,54 @@
         let isSpinning = false;
         let centerImage = null;
         let lastWinnerIndex = -1;
-        
+        let audioCtx = null;
+        let lastSliceIndex = -1;
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+
+        /* --- Sound Effects Generator --- */
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTickSound() {
+            try {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch(e){}
+        }
+
+        function playWinSound() {
+            try {
+                if (!audioCtx) return;
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + idx * 0.08);
+                    osc.stop(audioCtx.currentTime + idx * 0.08 + 0.3);
+                });
+            } catch(e){}
+        }
 
         function saveData() {
             const cleanEntries = entries.map(e => ({
@@ -629,7 +674,6 @@
             saveData();
         }
 
-        /* --- Dynamic Slices Calculation Based on Fake Chances --- */
         function getSliceAngles() {
             const totalFake = entries.reduce((sum, item) => sum + (parseFloat(item.fakeChance) || 0), 0);
             const slices = [];
@@ -705,6 +749,20 @@
                 
                 ctx.restore();
             });
+
+            // Check tick sound trigger (when pointer hits a new slice border)
+            const currentNormalizedAngle = (2 * Math.PI - (startAngle % (2 * Math.PI))) % (2 * Math.PI);
+            let currentSliceIndex = 0;
+            for (let i = 0; i < sliceAngles.length; i++) {
+                if (currentNormalizedAngle >= sliceAngles[i].start && currentNormalizedAngle < sliceAngles[i].end) {
+                    currentSliceIndex = i;
+                    break;
+                }
+            }
+            if (currentSliceIndex !== lastSliceIndex && isSpinning) {
+                playTickSound();
+                lastSliceIndex = currentSliceIndex;
+            }
 
             // Center Circle
             ctx.save();
@@ -823,7 +881,6 @@
             document.getElementById('secretModal').style.display = 'none';
         }
 
-        /* --- Real Weighted Spin Algorithm --- */
         function getWeightedRandomIndex() {
             const totalWeight = entries.reduce((sum, item) => sum + item.realWeight, 0);
             if (totalWeight <= 0) return 0;
@@ -836,44 +893,57 @@
             return 0;
         }
 
+        /* --- Smooth 6-Second Realistic Spin Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
+            initAudio();
             isSpinning = true;
 
             lastWinnerIndex = getWeightedRandomIndex();
             const sliceAngles = getSliceAngles();
             const winningSlice = sliceAngles[lastWinnerIndex];
 
-            // Randomize stop position WITHIN the specific slice range (10% to 90% inside slice)
             const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
             const targetAngle = winningSlice.start + randomOffset;
             
-            const extraRotations = (Math.floor(Math.random() * 3) + 5) * 2 * Math.PI; 
-            
-            const finalAngle = extraRotations - targetAngle;
+            const extraRotations = (Math.floor(Math.random() * 4) + 8) * 2 * Math.PI; 
+            const totalRotation = extraRotations - targetAngle;
 
-            let currentStep = 0;
-            const totalSteps = 120;
+            const startTime = performance.now();
+            const duration = 6000; // 6 seconds total spin time
 
-            function animate() {
-                currentStep++;
-                const progress = currentStep / totalSteps;
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                
-                startAngle = finalAngle * easeOut;
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Custom Ease-In-Out to Slow-Decay curve for ultra smooth physics
+                let easeProgress;
+                if (progress < 0.15) {
+                    // Quick smooth acceleration in the first 0.9s
+                    const accelProgress = progress / 0.15;
+                    easeProgress = 0.5 * Math.pow(accelProgress, 2) * 0.15;
+                } else {
+                    // Smooth long deceleration over remaining time
+                    const decelProgress = (progress - 0.15) / 0.85;
+                    const easeOutDecel = 1 - Math.pow(1 - decelProgress, 3.5);
+                    easeProgress = (0.5 * 0.15) + (easeOutDecel * (1 - (0.5 * 0.15)));
+                }
+
+                startAngle = totalRotation * easeProgress;
                 drawWheel();
 
-                if (currentStep < totalSteps) {
+                if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
                     const winnerName = entries[lastWinnerIndex].name;
+                    playWinSound();
                     addHistory(winnerName);
                     showWinnerModal(winnerName);
                 }
             }
 
-            animate();
+            requestAnimationFrame(animate);
         }
 
         function showWinnerModal(name) {
