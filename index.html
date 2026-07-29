@@ -476,7 +476,7 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        /* --- Sound Effects Generator --- */
+        /* --- Realistic Wooden Wheel Click Sound Generator --- */
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -486,17 +486,39 @@
         function playTickSound() {
             try {
                 if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+
+                // Main wooden pop sound
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.03);
+
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.03);
+
+                // Secondary subtle high snap (peg contact)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1200, now);
+                osc2.frequency.exponentialRampToValueAtTime(300, now + 0.015);
+
+                gain2.gain.setValueAtTime(0.12, now);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now);
+                osc2.stop(now + 0.015);
+
             } catch(e){}
         }
 
@@ -509,12 +531,12 @@
                     const gain = audioCtx.createGain();
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.08);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime + idx * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.3);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.35);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
                     osc.start(audioCtx.currentTime + idx * 0.08);
-                    osc.stop(audioCtx.currentTime + idx * 0.08 + 0.3);
+                    osc.stop(audioCtx.currentTime + idx * 0.08 + 0.35);
                 });
             } catch(e){}
         }
@@ -893,7 +915,7 @@
             return 0;
         }
 
-        /* --- Smooth 6-Second Realistic Spin Physics --- */
+        /* --- Continuous 10-Second Realistic Spin Physics --- */
         function spin() {
             if (isSpinning || entries.length === 0) return;
             initAudio();
@@ -903,33 +925,37 @@
             const sliceAngles = getSliceAngles();
             const winningSlice = sliceAngles[lastWinnerIndex];
 
+            // Random position within winning slice range
             const randomOffset = (Math.random() * 0.8 + 0.1) * winningSlice.angle;
-            const targetAngle = winningSlice.start + randomOffset;
+            const targetSliceAngle = winningSlice.start + randomOffset;
             
-            const extraRotations = (Math.floor(Math.random() * 4) + 8) * 2 * Math.PI; 
-            const totalRotation = extraRotations - targetAngle;
+            // 10-14 full extra rotations for extended 10s animation
+            const extraRotations = (Math.floor(Math.random() * 5) + 10) * 2 * Math.PI; 
 
+            // Calculate exact target angle based on CURRENT startAngle (continuous movement)
+            const currentMod = startAngle % (2 * Math.PI);
+            const neededAngleChange = extraRotations + (2 * Math.PI - targetSliceAngle) - currentMod;
+            
+            const initialAngle = startAngle;
             const startTime = performance.now();
-            const duration = 6000; // 6 seconds total spin time
+            const duration = 10000; // 10 seconds total duration
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Custom Ease-In-Out to Slow-Decay curve for ultra smooth physics
+                // Smooth physics curve: quick acceleration in 1s, smooth 9s gradual deceleration
                 let easeProgress;
-                if (progress < 0.15) {
-                    // Quick smooth acceleration in the first 0.9s
-                    const accelProgress = progress / 0.15;
-                    easeProgress = 0.5 * Math.pow(accelProgress, 2) * 0.15;
+                if (progress < 0.10) {
+                    const accelProgress = progress / 0.10;
+                    easeProgress = 0.5 * Math.pow(accelProgress, 2) * 0.10;
                 } else {
-                    // Smooth long deceleration over remaining time
-                    const decelProgress = (progress - 0.15) / 0.85;
-                    const easeOutDecel = 1 - Math.pow(1 - decelProgress, 3.5);
-                    easeProgress = (0.5 * 0.15) + (easeOutDecel * (1 - (0.5 * 0.15)));
+                    const decelProgress = (progress - 0.10) / 0.90;
+                    const easeOutDecel = 1 - Math.pow(1 - decelProgress, 4);
+                    easeProgress = (0.5 * 0.10) + (easeOutDecel * (1 - (0.5 * 0.10)));
                 }
 
-                startAngle = totalRotation * easeProgress;
+                startAngle = initialAngle + (neededAngleChange * easeProgress);
                 drawWheel();
 
                 if (progress < 1) {
