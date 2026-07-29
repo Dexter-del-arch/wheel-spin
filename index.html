@@ -21,7 +21,7 @@
             gap: 20px;
         }
 
-        /* Wheel Area: defaults to centered when sidebar is closed */
+        /* Wheel Area: Centered by default when sidebar is open */
         .wheel-area {
             flex: 1;
             display: flex;
@@ -32,8 +32,8 @@
             transform: translateX(0px); 
         }
 
-        /* When sidebar is open (default state), wheel shifts to the left */
-        body:not(.sidebar-closed) .wheel-area {
+        /* When sidebar is closed, wheel shifts to the side */
+        body.sidebar-closed .wheel-area {
             transform: translateX(190px); 
         }
 
@@ -971,11 +971,11 @@
             if (sidebar.classList.contains('closed')) {
                 overlay.classList.add('visible');
                 toggleIcon.style.transform = 'rotate(180deg)';
-                document.body.classList.add('sidebar-closed'); // סגור -> עובר לאמצע
+                document.body.classList.add('sidebar-closed'); // סגור -> הגלגל זז לצד
             } else {
                 overlay.classList.remove('visible');
                 toggleIcon.style.transform = 'rotate(0deg)';
-                document.body.classList.remove('sidebar-closed'); // פתוח -> זז שמאלה
+                document.body.classList.remove('sidebar-closed'); // פתוח -> הגלגל במרכז
             }
         }
 
