@@ -16,19 +16,50 @@
             padding: 20px;
             height: 100vh;
             display: flex;
+            justify-content: space-between;
+            align-items: center;
             background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
             overflow: hidden;
             gap: 20px;
-            position: relative;
         }
 
-        /* Wheel Area: permanently centered */
+        /* Left Side: Chances Overlay Permanently Fixed */
+        .chances-overlay {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            z-index: 25;
+            order: 1;
+        }
+
+        .chances-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+            color: #1e293b;
+        }
+
+        .chance-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        /* Center: Wheel Area Permanently Centered */
         .wheel-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            order: 2;
         }
 
         .wheel-container {
@@ -65,6 +96,7 @@
             transition: fill 0.15s ease;
         }
 
+        /* Right Side: Sidebar Menu */
         .sidebar {
             width: 380px;
             background: white;
@@ -76,14 +108,17 @@
             transition: transform 0.3s ease, opacity 0.3s ease;
             position: relative;
             z-index: 20;
-            order: 2;
+            order: 3;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .sidebar.closed {
             transform: translateX(420px);
             opacity: 0;
             pointer-events: none;
+            position: absolute;
+            right: -420px;
         }
 
         .toggle-btn {
@@ -325,36 +360,6 @@
             background: #fecaca;
         }
 
-        /* Chances Overlay: permanently positioned on the left side */
-        .chances-overlay {
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            min-width: 200px;
-            display: block;
-            z-index: 25;
-        }
-
-        .chances-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 6px;
-            color: #1e293b;
-        }
-
-        .chance-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-bottom: 6px;
-            color: #334155;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -429,13 +434,13 @@
 </head>
 <body>
 
-    <!-- Chances Overlay permanently on the left -->
+    <!-- Left Side: Chances Overlay -->
     <div class="chances-overlay" id="chancesOverlay">
         <div class="chances-title">📊 Chances:</div>
         <div id="chancesList"></div>
     </div>
 
-    <!-- Wheel Area permanently centered -->
+    <!-- Center: Wheel Area -->
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
             <div class="pointer-container">
@@ -458,6 +463,7 @@
         </svg>
     </button>
 
+    <!-- Right Side: Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="tab-btn active" id="entriesTabBtn" onclick="switchTab('settings')" ondblclick="toggleSecretButton()">Entries (<span id="entryCount">0</span>)</button>
