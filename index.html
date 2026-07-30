@@ -23,17 +23,19 @@
             gap: 20px;
         }
 
-        /* Left Side: Chances Overlay */
+        /* Left Side: Chances Overlay anchored at top-left */
         .chances-overlay {
+            position: fixed;
+            top: 25px;
+            left: 25px;
             width: 260px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px;
             border-radius: 14px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            max-height: calc(100vh - 40px);
+            max-height: calc(100vh - 50px);
             overflow-y: auto;
             z-index: 25;
-            order: 1;
         }
 
         .chances-title {
@@ -59,7 +61,6 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            order: 2;
         }
 
         .wheel-container {
@@ -96,7 +97,7 @@
             transition: fill 0.15s ease;
         }
 
-        /* Right Side: Sidebar */
+        /* Right Side: Sidebar with smooth slide animation */
         .sidebar {
             width: 380px;
             background: white;
@@ -105,46 +106,53 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.25);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            position: relative;
+            position: fixed;
+            right: 20px;
+            top: 20px;
             z-index: 20;
-            order: 3;
             overflow: hidden;
             flex-shrink: 0;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
         }
 
         .sidebar.closed {
             transform: translateX(420px);
             opacity: 0;
             pointer-events: none;
-            position: absolute;
-            right: -420px;
         }
 
-        /* Toggle Button with Dark Logo.png, transparent background, and blend mode to clear white background */
+        /* Toggle Button with Dark Logo.png, circular frame, and 360 spin animation */
         .toggle-btn {
             position: fixed;
             top: 30px;
             right: 30px;
-            background: transparent;
-            border: none;
-            width: 48px;
-            height: 48px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
+            padding: 4px;
             z-index: 30;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+        }
+
+        .toggle-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
         }
 
         .toggle-logo {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            mix-blend-mode: multiply; /* מסיר רקע לבן אוטומטית אם קיים */
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+            border-radius: 50%;
+            mix-blend-mode: multiply; /* מסיר רקע לבן אוטומטית */
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar-header {
@@ -434,7 +442,7 @@
 </head>
 <body>
 
-    <!-- Left Side: Chances Overlay -->
+    <!-- Left Side: Chances Overlay (Top Left) -->
     <div class="chances-overlay" id="chancesOverlay">
         <div class="chances-title">📊 Chances:</div>
         <div id="chancesList"></div>
@@ -446,18 +454,18 @@
             <div class="pointer-container">
                 <svg class="pointer-svg" viewBox="0 0 100 100">
                     <path d="M 85,20 L 15,50 A 4,4 0 0,0 15,50 L 85,80 A 6,6 0 0,0 93,74 L 93,26 A 6,6 0 0,0 85,20 Z" 
-                          id="pointerPath" 
-                          fill="#2563eb" 
-                          stroke="#ffffff" 
-                          stroke-width="5" 
-                          stroke-linejoin="round"/>
+                        id="pointerPath" 
+                        fill="#2563eb" 
+                        stroke="#ffffff" 
+                        stroke-width="5" 
+                        stroke-linejoin="round"/>
                 </svg>
             </div>
             <canvas id="canvas" width="520" height="520"></canvas>
         </div>
     </div>
 
-    <!-- Toggle Button with Dark Logo.png -->
+    <!-- Toggle Button with Circular Logo and 360 Spin -->
     <button class="toggle-btn" onclick="toggleSidebar()">
         <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
     </button>
@@ -966,11 +974,8 @@
             
             sidebar.classList.toggle('closed');
             
-            if (sidebar.classList.contains('closed')) {
-                currentRotation += 360; 
-            } else {
-                currentRotation -= 360; 
-            }
+            // 360-degree rotation animation toggle
+            currentRotation += 360; 
             toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
 
