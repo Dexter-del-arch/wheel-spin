@@ -19,22 +19,16 @@
             background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
             overflow: hidden;
             gap: 20px;
+            position: relative;
         }
 
-        /* Wheel Area: Centered by default when sidebar is open */
+        /* Wheel Area: permanently centered */
         .wheel-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            transition: transform 0.3s ease;
-            transform: translateX(0px); 
-        }
-
-        /* When sidebar is closed, wheel shifts to the side */
-        body.sidebar-closed .wheel-area {
-            transform: translateX(190px); 
         }
 
         .wheel-container {
@@ -331,21 +325,18 @@
             background: #fecaca;
         }
 
+        /* Chances Overlay: permanently positioned on the left side */
         .chances-overlay {
             position: absolute;
             top: 25px;
-            right: 90px;
+            left: 25px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px;
             border-radius: 14px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             min-width: 200px;
-            display: none;
-            z-index: 25;
-        }
-
-        .chances-overlay.visible {
             display: block;
+            z-index: 25;
         }
 
         .chances-title {
@@ -438,6 +429,13 @@
 </head>
 <body>
 
+    <!-- Chances Overlay permanently on the left -->
+    <div class="chances-overlay" id="chancesOverlay">
+        <div class="chances-title">📊 Chances:</div>
+        <div id="chancesList"></div>
+    </div>
+
+    <!-- Wheel Area permanently centered -->
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
             <div class="pointer-container">
@@ -452,11 +450,6 @@
             </div>
             <canvas id="canvas" width="520" height="520"></canvas>
         </div>
-    </div>
-
-    <div class="chances-overlay" id="chancesOverlay">
-        <div class="chances-title">📊 Chances:</div>
-        <div id="chancesList"></div>
     </div>
 
     <button class="toggle-btn" onclick="toggleSidebar()">
@@ -963,19 +956,14 @@
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('chancesOverlay');
             const toggleIcon = document.getElementById('toggleIcon');
             
             sidebar.classList.toggle('closed');
             
             if (sidebar.classList.contains('closed')) {
-                overlay.classList.add('visible');
                 toggleIcon.style.transform = 'rotate(180deg)';
-                document.body.classList.add('sidebar-closed'); // סגור -> הגלגל זז לצד
             } else {
-                overlay.classList.remove('visible');
                 toggleIcon.style.transform = 'rotate(0deg)';
-                document.body.classList.remove('sidebar-closed'); // פתוח -> הגלגל במרכז
             }
         }
 
