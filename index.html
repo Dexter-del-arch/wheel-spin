@@ -121,7 +121,7 @@
             right: -420px;
         }
 
-        /* Toggle Button with dark.avif logo, no background, and 360 spin animation */
+        /* Toggle Button with Dark Logo.png, transparent background, and blend mode to clear white background */
         .toggle-btn {
             position: fixed;
             top: 30px;
@@ -142,6 +142,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            mix-blend-mode: multiply; /* מסיר רקע לבן אוטומטית אם קיים */
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
         }
@@ -456,9 +457,9 @@
         </div>
     </div>
 
-    <!-- Toggle Button with dark.avif logo -->
+    <!-- Toggle Button with Dark Logo.png -->
     <button class="toggle-btn" onclick="toggleSidebar()">
-        <img src="dark.avif" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
+        <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
     </button>
 
     <!-- Right Side: Sidebar -->
@@ -538,7 +539,7 @@
         let lastSliceIndex = -1;
         let isHistoryEditMode = false;
         let isSecretButtonVisible = false;
-        let currentRotation = 0; // Tracks 360 degree spin for the logo
+        let currentRotation = 0;
 
         const wheelSound = new Audio('Wheel Sound');
 
@@ -965,11 +966,10 @@
             
             sidebar.classList.toggle('closed');
             
-            // Spin 360 degrees in the direction of opening/closing
             if (sidebar.classList.contains('closed')) {
-                currentRotation += 360; // Spin towards closing direction
+                currentRotation += 360; 
             } else {
-                currentRotation -= 360; // Spin towards opening direction
+                currentRotation -= 360; 
             }
             toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
