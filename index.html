@@ -23,7 +23,7 @@
             gap: 20px;
         }
 
-        /* Left Side: Chances Overlay Permanently Fixed */
+        /* Left Side: Chances Overlay */
         .chances-overlay {
             width: 260px;
             background: rgba(255, 255, 255, 0.95);
@@ -52,7 +52,7 @@
             color: #334155;
         }
 
-        /* Center: Wheel Area Permanently Centered */
+        /* Center: Wheel Area strictly centered */
         .wheel-area {
             flex: 1;
             display: flex;
@@ -96,7 +96,7 @@
             transition: fill 0.15s ease;
         }
 
-        /* Right Side: Sidebar Menu */
+        /* Right Side: Sidebar */
         .sidebar {
             width: 380px;
             background: white;
@@ -121,30 +121,29 @@
             right: -420px;
         }
 
+        /* Toggle Button with dark.avif logo, no background, and 360 spin animation */
         .toggle-btn {
             position: fixed;
-            top: 35px;
-            right: 35px;
-            background: #2563eb;
-            color: white;
+            top: 30px;
+            right: 30px;
+            background: transparent;
             border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
             padding: 0;
             z-index: 30;
         }
 
-        .toggle-btn svg {
-            width: 22px;
-            height: 22px;
-            fill: white;
-            transition: transform 0.3s ease;
+        .toggle-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
         }
 
         .sidebar-header {
@@ -457,10 +456,9 @@
         </div>
     </div>
 
+    <!-- Toggle Button with dark.avif logo -->
     <button class="toggle-btn" onclick="toggleSidebar()">
-        <svg viewBox="0 0 24 24" id="toggleIcon">
-            <path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <img src="dark.avif" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
     </button>
 
     <!-- Right Side: Sidebar -->
@@ -540,6 +538,7 @@
         let lastSliceIndex = -1;
         let isHistoryEditMode = false;
         let isSecretButtonVisible = false;
+        let currentRotation = 0; // Tracks 360 degree spin for the logo
 
         const wheelSound = new Audio('Wheel Sound');
 
@@ -962,15 +961,17 @@
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleLogo = document.getElementById('toggleLogo');
             
             sidebar.classList.toggle('closed');
             
+            // Spin 360 degrees in the direction of opening/closing
             if (sidebar.classList.contains('closed')) {
-                toggleIcon.style.transform = 'rotate(180deg)';
+                currentRotation += 360; // Spin towards closing direction
             } else {
-                toggleIcon.style.transform = 'rotate(0deg)';
+                currentRotation -= 360; // Spin towards opening direction
             }
+            toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
 
         function updateChancesOverlay() {
