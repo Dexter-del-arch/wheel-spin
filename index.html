@@ -23,7 +23,7 @@
             gap: 20px;
         }
 
-        /* Left Side: Chances Overlay anchored at top-left */
+        /* Left Side: Chances Overlay (Top Left) */
         .chances-overlay {
             position: fixed;
             top: 25px;
@@ -54,13 +54,15 @@
             color: #334155;
         }
 
-        /* Center: Wheel Area strictly centered */
+        /* Center: Wheel Area strictly centered between overlays */
         .wheel-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            margin-left: 280px; /* מפצה בדיוק על הרוחב של תיבת הסיכויים בצד שמאל כדי שהגלגל יישב במרכז האמיתי */
+            margin-right: 400px; /* מפצה על רוחב תפריט ההגדרות מצד ימין */
         }
 
         .wheel-container {
@@ -121,7 +123,7 @@
             pointer-events: none;
         }
 
-        /* Toggle Button with Dark Logo.png, circular frame, and 360 spin animation */
+        /* Toggle Button with Circular Logo */
         .toggle-btn {
             position: fixed;
             top: 30px;
@@ -138,7 +140,7 @@
             padding: 4px;
             z-index: 30;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+            transition: transform 0.3s ease, background-color 0.2s;
         }
 
         .toggle-btn:hover {
@@ -151,7 +153,7 @@
             height: 100%;
             object-fit: contain;
             border-radius: 50%;
-            mix-blend-mode: multiply; /* מסיר רקע לבן אוטומטית */
+            mix-blend-mode: multiply;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -448,7 +450,7 @@
         <div id="chancesList"></div>
     </div>
 
-    <!-- Center: Wheel Area -->
+    <!-- Center: Wheel Area (Centered perfectly between panels) -->
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
             <div class="pointer-container">
@@ -465,7 +467,7 @@
         </div>
     </div>
 
-    <!-- Toggle Button with Circular Logo and 360 Spin -->
+    <!-- Toggle Button with Circular Logo -->
     <button class="toggle-btn" onclick="toggleSidebar()">
         <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
     </button>
@@ -974,8 +976,13 @@
             
             sidebar.classList.toggle('closed');
             
-            // 360-degree rotation animation toggle
-            currentRotation += 360; 
+            // אם התפריט נפתח (היה סגור ועכשיו נפתח) - מסתובב שמאלה (-360)
+            // אם התפריט נסגר (היה פתוח ועכשיו נסגר) - מסתובב ימינה (+360)
+            if (sidebar.classList.contains('closed')) {
+                currentRotation += 360; // סגירה -> ימינה
+            } else {
+                currentRotation -= 360; // פתיחה -> שמאל
+            }
             toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
 
