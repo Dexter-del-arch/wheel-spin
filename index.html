@@ -61,8 +61,8 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            margin-left: 280px; /* מפצה בדיוק על הרוחב של תיבת הסיכויים בצד שמאל כדי שהגלגל יישב במרכז האמיתי */
-            margin-right: 400px; /* מפצה על רוחב תפריט ההגדרות מצד ימין */
+            margin-left: 280px;
+            margin-right: 400px;
         }
 
         .wheel-container {
@@ -450,7 +450,7 @@
         <div id="chancesList"></div>
     </div>
 
-    <!-- Center: Wheel Area (Centered perfectly between panels) -->
+    <!-- Center: Wheel Area -->
     <div class="wheel-area">
         <div class="wheel-container" onclick="spin()">
             <div class="pointer-container">
@@ -514,9 +514,12 @@
 
     <div class="modal" id="secretModal">
         <div class="modal-content" style="text-align: left;">
-            <h3 style="margin-top:0;">🤫 Real Chances (Secret)</h3>
-            <p style="font-size: 12px; color: #64748b;">Set actual probability percentage for each item:</p>
-            <div id="secretList"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                <h3 style="margin:0;">🤫 Real Chances (Secret)</h3>
+                <span id="secretTotalLabel" style="font-size: 13px; font-weight: bold; color: #2563eb;">Total: 0%</span>
+            </div>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Set actual probability percentage for each unique item:</p>
+            <div id="secretList" style="max-height: 300px; overflow-y: auto;"></div>
             <button class="btn-add" style="width: 100%; margin: 15px 0 0 0;" onclick="closeSecretModal()">Save & Close</button>
         </div>
     </div>
@@ -739,11 +742,6 @@
             entries[index].fakeChance = val;
             drawWheel();
             updateChancesOverlay();
-            saveData();
-        }
-
-        function updateRealWeight(index, val) {
-            entries[index].realWeight = parseFloat(val) || 0;
             saveData();
         }
 
@@ -976,8 +974,6 @@
             
             sidebar.classList.toggle('closed');
             
-            // אם התפריט נפתח (היה סגור ועכשיו נפתח) - מסתובב שמאלה (-360)
-            // אם התפריט נסגר (היה פתוח ועכשיו נסגר) - מסתובב ימינה (+360)
             if (sidebar.classList.contains('closed')) {
                 currentRotation += 360; // סגירה -> ימינה
             } else {
@@ -1012,21 +1008,90 @@
         function openSecretModal() {
             const list = document.getElementById('secretList');
             list.innerHTML = '';
-            entries.forEach((item, i) => {
+            
+            // איסוף שמות ייחודיים בלבד וחישוב המשקל הנוכחי שלהם
+            const uniqueNames = {};
+            const totalWeight = entries.reduce((sum, item) => sum + (parseFloat(item.realWeight) || 0), 0);
+
+            entries.forEach(item => {
+                const name = item.name.trim() || 'Unnamed';
+                if (!uniqueNames[name]) {
+                    uniqueNames[name] = 0;
+                }
+                uniqueNames[name] += (parseFloat(item.realWeight) || 0);
+            });
+
+            // יצירת שורות עבור כל שם ייחודי
+            for (const [name, weight] of Object.entries(uniqueNames)) {
+                // המרה לאחוז מתוך סך הכל המשקולות
+                let percent = totalWeight > 0 ? Math.round((weight / totalWeight) * 100) : 0;
+                
                 list.innerHTML += `
-                    <div class="modal-item">
-                        <span>${item.name}</span>
+                    <div class="modal-item" data-name="${name}">
+                        <span style="font-weight:600; color:#334155;">${name}</span>
                         <div class="percent-wrapper">
-                            <input type="text" class="fake-input" value="${item.realWeight}" oninput="updateRealWeight(${i}, this.value)">
+                            <input type="text" class="fake-input secret-input" data-name="${name}" value="${percent}" oninput="handleSecretInput(this)">
                             <span class="percent-symbol">%</span>
                         </div>
                     </div>
                 `;
-            });
+            }
+            
+            updateSecretTotal();
             document.getElementById('secretModal').style.display = 'flex';
         }
 
+        function handleSecretInput(input) {
+            let val = parseFloat(input.value) || 0;
+            if (val < 0) val = 0;
+
+            // בדיקת סך הכל אחוזים במופעים השונים
+            let currentTotal = 0;
+            const inputs = document.querySelectorAll('.secret-input');
+            inputs.forEach(inp => {
+                if (inp !== input) {
+                    currentTotal += parseFloat(inp.value) || 0;
+                }
+            });
+
+            if (currentTotal + val > 100) {
+                alert("The maximum total percentage cannot exceed 100%!");
+                val = Math.max(0, 100 - currentTotal);
+                input.value = val;
+            }
+
+            updateSecretTotal();
+        }
+
+        function updateSecretTotal() {
+            let total = 0;
+            document.querySelectorAll('.secret-input').forEach(inp => {
+                total += parseFloat(inp.value) || 0;
+            });
+            const totalLabel = document.getElementById('secretTotalLabel');
+            totalLabel.innerText = `Total: ${total}%`;
+            totalLabel.style.color = total === 100 ? '#16a34a' : '#2563eb';
+        }
+
         function closeSecretModal() {
+            // שמירת האחוזים החדשים וחלוקתם שווה בשווה בין כל האייטמים בעלי אותו שם
+            const secretData = {};
+            document.querySelectorAll('.secret-input').forEach(inp => {
+                const name = inp.getAttribute('data-name');
+                secretData[name] = parseFloat(inp.value) || 0;
+            });
+
+            for (const [name, targetPercent] of Object.entries(secretData)) {
+                const matchingEntries = entries.filter(e => (e.name.trim() || 'Unnamed') === name);
+                if (matchingEntries.length > 0) {
+                    const share = targetPercent / matchingEntries.length;
+                    matchingEntries.forEach(e => {
+                        e.realWeight = share;
+                    });
+                }
+            }
+
+            saveData();
             document.getElementById('secretModal').style.display = 'none';
         }
 
