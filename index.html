@@ -147,20 +147,25 @@
             align-items: center;
         }
 
+        /* כפתור חזרה לדשבורד - ממוקם בצד ימין ליד כפתור ההגדרות */
         .btn-back-home {
             position: fixed;
             top: 30px;
-            left: 30px;
+            right: 95px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 10px 18px;
-            font-weight: bold;
-            color: #1e293b;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
             z-index: 30;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: 0.2s;
+            transition: transform 0.3s ease, background-color 0.2s;
+            font-size: 20px;
         }
         .btn-back-home:hover {
             background: #ffffff;
@@ -170,14 +175,14 @@
         /* סגנונות הגלגל הקיימים */
         .chances-overlay {
             position: fixed;
-            top: 95px;
+            top: 25px;
             left: 25px;
             width: 260px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px;
             border-radius: 14px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            max-height: calc(100vh - 120px);
+            max-height: calc(100vh - 50px);
             overflow-y: auto;
             z-index: 25;
         }
@@ -270,16 +275,30 @@
     <div class="dashboard-container" id="dashboardView">
         <div class="dashboard-header">
             <div class="dashboard-title">🎯 Wheel Studio Dashboard</div>
-            <button class="btn-new-project" onclick="createNewProject()">+ New Wheel Project</button>
+            <button class="btn-new-project" onclick="openNewProjectModal()">+ New Wheel Project</button>
         </div>
         <div class="projects-grid" id="projectsGrid">
             <!-- כאן יופיעו הפרויקטים שלך דינמית -->
         </div>
     </div>
 
+    <!-- מודל יפהפה באמצע המסך ליצירת פרויקט חדש -->
+    <div class="modal" id="newProjectModal">
+        <div class="modal-content" style="text-align: left;">
+            <h3 style="margin-top:0; color:#1e293b;">✨ Create New Wheel</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Enter a name for your new wheel project:</p>
+            <input type="text" id="newProjectNameInput" class="entry-input" style="width:100%; padding:10px; font-size:15px; margin-bottom:20px;" placeholder="e.g. Food, Roblox Items...">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-close" onclick="closeNewProjectModal()">Cancel</button>
+                <button class="btn-action" style="flex:1; padding:10px; border-radius:8px;" onclick="confirmCreateProject()">Create Wheel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= WHEEL APP VIEW ================= -->
     <div id="wheelAppView">
-        <button class="btn-back-home" onclick="goBackToDashboard()">🏠 Dashboard</button>
+        <!-- כפתור חזרה לדשבורד ממוקם בצד ימין ליד ההגדרות -->
+        <button class="btn-back-home" onclick="goBackToDashboard()" title="Dashboard">🏠</button>
 
         <div class="chances-overlay" id="chancesOverlay">
             <div class="chances-title">📊 Chances:</div>
@@ -369,11 +388,9 @@
         // --- DASHBOARD & PROJECTS LOGIC ---
         function getProjects() {
             try {
-                return JSON.parse(localStorage.getItem('wheel_studio_projects')) || [
-                    { id: 'default_animals', name: 'Animals Wheel' }
-                ];
+                return JSON.parse(localStorage.getItem('wheel_studio_projects')) || [];
             } catch(e) {
-                return [{ id: 'default_animals', name: 'Animals Wheel' }];
+                return [];
             }
         }
 
@@ -386,6 +403,11 @@
             const projects = getProjects();
             grid.innerHTML = '';
 
+            if (projects.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: white; margin-top: 50px; font-size: 18px; opacity: 0.8;">No wheels yet. Click "+ New Wheel Project" to start!</div>`;
+                return;
+            }
+
             projects.forEach(proj => {
                 const card = document.createElement('div');
                 card.className = 'project-card';
@@ -396,23 +418,33 @@
                     </div>
                     <div class="project-actions">
                         <button class="btn-card-open" onclick="openProject('${proj.id}')">Open Wheel 🎡</button>
-                        ${projects.length > 1 ? `<button class="btn-card-delete" onclick="deleteProject('${proj.id}')">🗑️</button>` : ''}
+                        <button class="btn-card-delete" onclick="deleteProject('${proj.id}')">🗑️</button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function createNewProject() {
-            const name = prompt("Enter new wheel project name (e.g., Food, Roblox Items):");
-            if (!name || !name.trim()) return;
+        function openNewProjectModal() {
+            document.getElementById('newProjectNameInput').value = '';
+            document.getElementById('newProjectModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('newProjectNameInput').focus(), 100);
+        }
+
+        function closeNewProjectModal() {
+            document.getElementById('newProjectModal').style.display = 'none';
+        }
+
+        function confirmCreateProject() {
+            const nameInput = document.getElementById('newProjectNameInput');
+            const name = nameInput.value.trim();
+            if (!name) return;
 
             const id = 'wheel_' + Date.now();
             const projects = getProjects();
-            projects.push({ id, name: name.trim() });
+            projects.push({ id, name });
             saveProjects(projects);
             
-            // יצירת נתונים התחלתיים לפרויקט החדש
             const defaultEntries = [
                 { name: 'Item 1', color: '#2563eb', fakeChance: '50', realWeight: 50, imgSrc: null },
                 { name: 'Item 2', color: '#dc2626', fakeChance: '50', realWeight: 50, imgSrc: null }
@@ -420,6 +452,7 @@
             localStorage.setItem(`wheel_entries_${id}`, JSON.stringify(defaultEntries));
             localStorage.setItem(`wheel_history_${id}`, JSON.stringify([]));
 
+            closeNewProjectModal();
             renderDashboard();
         }
 
@@ -451,7 +484,7 @@
             renderDashboard();
         }
 
-        // --- WHEEL APP LOGIC (Scoped to currentProjectID) ---
+        // --- WHEEL APP LOGIC ---
         let entries = [];
         let history = [];
         let startAngle = 0;
@@ -526,7 +559,6 @@
             const savedCenterImg = localStorage.getItem(`wheel_center_img_${currentProjectID}`);
 
             centerImage = null;
-            document.getElementById('wheel_center_img')?.remove?.();
 
             if (savedEntries) {
                 const parsed = JSON.parse(savedEntries);
@@ -540,10 +572,7 @@
                     return { name: e.name, color: e.color, fakeChance: e.fakeChance, realWeight: e.realWeight, img: imgObj };
                 });
             } else {
-                entries = [
-                    { name: 'Item 1', color: '#2563eb', fakeChance: '50', realWeight: 50, img: null },
-                    { name: 'Item 2', color: '#dc2626', fakeChance: '50', realWeight: 50, img: null }
-                ];
+                entries = [];
             }
 
             if (savedHistory) {
@@ -668,7 +697,7 @@
                 if (totalFake > 0) {
                     sliceAngle = ((parseFloat(item.fakeChance) || 0) / totalFake) * (2 * Math.PI);
                 } else {
-                    sliceAngle = (2 * Math.PI) / entries.length;
+                    sliceAngle = entries.length > 0 ? (2 * Math.PI) / entries.length : 0;
                 }
                 slices.push({ start: currentAngle, angle: sliceAngle, end: currentAngle + sliceAngle });
                 currentAngle += sliceAngle;
@@ -858,7 +887,11 @@
             const sidebar = document.getElementById('sidebar');
             const toggleLogo = document.getElementById('toggleLogo');
             sidebar.classList.toggle('closed');
-            currentRotation += sidebar.classList.contains('closed') ? 360 : -360;
+            if (sidebar.classList.contains('closed')) {
+                currentRotation += 360; // סגירה -> ימינה
+            } else {
+                currentRotation -= 360; // פתיחה -> שמאל
+            }
             toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
 
@@ -1039,7 +1072,6 @@
         document.addEventListener('click', () => initAudio(), { once: true });
         document.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'Enter') spin(); });
 
-        // טעינת לוח הבקרה בהפעלה הראשונה
         renderDashboard();
     </script>
 </body>
