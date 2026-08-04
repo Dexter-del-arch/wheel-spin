@@ -189,42 +189,52 @@
             z-index: 20; overflow: hidden; flex-shrink: 0;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
         }
-        .sidebar.closed { transform: translateX(420px); opacity: 0; pointer-events: none; }
+        
+        /* כאשר התפריט סגור, הסיידבר זז ימינה */
+        .sidebar.closed { 
+            transform: translateX(420px); 
+            opacity: 0; 
+            pointer-events: none; 
+        }
 
+        /* כפתור ההגדרות (הלוגו) */
         .toggle-btn {
             position: fixed; top: 30px; right: 30px; background: rgba(255, 255, 255, 0.9);
             border: 2px solid #e2e8f0; border-radius: 50%; width: 52px; height: 52px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             padding: 4px; z-index: 30; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: transform 0.3s ease, background-color 0.2s;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, background-color 0.2s;
         }
         .toggle-btn:hover { background: #ffffff; transform: scale(1.05); }
         .toggle-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; mix-blend-mode: multiply; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* כפתור הבית זז ומסתתר יחד עם ההגדרות באותה אנימציה בדיוק */
+        /* כפתור הבית מעוצב בדיוק כמו כפתור ההגדרות וזז יחד איתו באותה אנימציה */
         .btn-back-home {
-            position: fixed;
-            top: 30px;
-            right: 92px;
+            position: fixed; 
+            top: 30px; 
+            right: 92px; 
             background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #e2e8f0;
-            border-radius: 50%;
-            width: 52px;
+            border: 2px solid #e2e8f0; 
+            border-radius: 50%; 
+            width: 52px; 
             height: 52px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
             justify-content: center;
-            padding: 0;
-            z-index: 30;
+            padding: 0; 
+            z-index: 30; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, background-color 0.2s;
             font-size: 20px;
         }
-        .btn-back-home:hover {
-            background: #ffffff;
-            transform: scale(1.05);
+        .btn-back-home:hover { 
+            background: #ffffff; 
+            transform: scale(1.05); 
         }
+
+        /* ברגע שהסיידבר נסגר, שני הכפתורים זזים ימינה באותו קצב */
+        .sidebar.closed ~ .toggle-btn,
         .sidebar.closed ~ .btn-back-home {
             transform: translateX(420px);
             opacity: 0;
@@ -329,6 +339,7 @@
             </div>
         </div>
 
+        <!-- כפתורים עליונים שזזים ונסגרים יחד באותה אנימציה -->
         <button class="toggle-btn" onclick="toggleSidebar()">
             <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
         </button>
@@ -792,11 +803,9 @@
                 ctx.translate(260, 260);
                 ctx.rotate(angle + sliceAngle / 2);
 
-                // --- חישוב והתאמת גודל טקסט דינמי כך שלא יברח מהגלגל ---
                 let fontSize = 22;
                 ctx.font = `bold ${fontSize}px Arial`;
                 
-                // מרחב זמין בתוך הפרוסה (מהמרכז עד קצה הרדיוס מינוס רווח לשוליים)
                 const maxAvailableWidth = 190; 
                 let textWidth = ctx.measureText(item.name).width;
 
