@@ -147,32 +147,6 @@
             align-items: center;
         }
 
-        /* כפתור חזרה לדשבורד - ממוקם בצד ימין ליד כפתור ההגדרות */
-        .btn-back-home {
-            position: fixed;
-            top: 30px;
-            right: 95px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #e2e8f0;
-            border-radius: 50%;
-            width: 52px;
-            height: 52px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            z-index: 30;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: transform 0.3s ease, background-color 0.2s;
-            font-size: 20px;
-        }
-        .btn-back-home:hover {
-            background: #ffffff;
-            transform: scale(1.05);
-        }
-
-        /* סגנונות הגלגל הקיימים */
         .chances-overlay {
             position: fixed;
             top: 25px;
@@ -227,6 +201,35 @@
         .toggle-btn:hover { background: #ffffff; transform: scale(1.05); }
         .toggle-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; mix-blend-mode: multiply; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
+        .btn-back-home {
+            position: fixed;
+            top: 30px;
+            right: 92px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 30;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, background-color 0.2s;
+            font-size: 20px;
+        }
+        .btn-back-home:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+        .sidebar.closed ~ .btn-back-home {
+            transform: translateX(420px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .sidebar-header { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; background: #f8fafc; }
         .tab-btn { padding: 8px 18px; border: none; background: #e2e8f0; border-radius: 20px; cursor: pointer; font-weight: bold; color: #475569; transition: 0.2s; user-select: none; }
         .tab-btn.active { background: #2563eb; color: white; }
@@ -240,7 +243,20 @@
         .tab-content { flex: 1; overflow-y: auto; padding: 15px; display: none; }
         .tab-content.active { display: block; }
 
-        .entry-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .entry-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; background: #fff; padding: 2px; border-radius: 6px; }
+        .entry-row.dragging { opacity: 0.4; background: #e2e8f0; }
+        
+        .drag-handle {
+            cursor: grab;
+            color: #94a3b8;
+            font-size: 16px;
+            padding: 0 2px;
+            display: none;
+            user-select: none;
+        }
+        .drag-handle:active { cursor: grabbing; }
+        .secret-mode-active .drag-handle { display: inline-block; }
+
         .entry-input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; font-size: 13px; }
         .percent-wrapper { position: relative; display: flex; align-items: center; }
         .fake-input { width: 65px; padding: 8px 18px 8px 6px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; font-size: 13px; }
@@ -277,9 +293,7 @@
             <div class="dashboard-title">🎯 Wheel Studio Dashboard</div>
             <button class="btn-new-project" onclick="openNewProjectModal()">+ New Wheel Project</button>
         </div>
-        <div class="projects-grid" id="projectsGrid">
-            <!-- כאן יופיעו הפרויקטים שלך דינמית -->
-        </div>
+        <div class="projects-grid" id="projectsGrid"></div>
     </div>
 
     <!-- מודל יפהפה באמצע המסך ליצירת פרויקט חדש -->
@@ -297,9 +311,6 @@
 
     <!-- ================= WHEEL APP VIEW ================= -->
     <div id="wheelAppView">
-        <!-- כפתור חזרה לדשבורד ממוקם בצד ימין ליד ההגדרות -->
-        <button class="btn-back-home" onclick="goBackToDashboard()" title="Dashboard">🏠</button>
-
         <div class="chances-overlay" id="chancesOverlay">
             <div class="chances-title">📊 Chances:</div>
             <div id="chancesList"></div>
@@ -320,6 +331,8 @@
         <button class="toggle-btn" onclick="toggleSidebar()">
             <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
         </button>
+
+        <button class="btn-back-home" onclick="goBackToDashboard()" title="Dashboard">🏠</button>
 
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -385,7 +398,6 @@
     </div>
 
     <script>
-        // --- DASHBOARD & PROJECTS LOGIC ---
         function getProjects() {
             try {
                 return JSON.parse(localStorage.getItem('wheel_studio_projects')) || [];
@@ -484,7 +496,6 @@
             renderDashboard();
         }
 
-        // --- WHEEL APP LOGIC ---
         let entries = [];
         let history = [];
         let startAngle = 0;
@@ -496,6 +507,7 @@
         let isHistoryEditMode = false;
         let isSecretButtonVisible = false;
         let currentRotation = 0;
+        let draggedIndex = null;
 
         const wheelSound = new Audio('Wheel Sound');
 
@@ -657,12 +669,21 @@
             entries.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'entry-row';
+                div.setAttribute('data-index', index);
                 
+                // תמיכה בגרירה רק במצב סודי
+                div.draggable = isSecretButtonVisible;
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('drop', handleDrop);
+                div.addEventListener('dragend', handleDragEnd);
+
                 let imgControls = item.img ? 
                     `<button class="btn-remove-img" title="Remove image" onclick="removeEntryImage(${index})">❌</button>` : 
                     `<button class="img-btn" onclick="document.getElementById('file-${index}').click()">🖼️</button>`;
 
                 div.innerHTML = `
+                    <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
                     <button class="btn-remove" onclick="removeEntry(${index})">✖</button>
                     <input type="color" class="color-picker" value="${item.color}" onchange="updateColor(${index}, this.value)">
                     ${imgControls}
@@ -675,9 +696,47 @@
                 `;
                 list.appendChild(div);
             });
+
+            // הוספת קלאס למסגרת לפי מצב סודי
+            const sidebarEl = document.getElementById('sidebar');
+            if (isSecretButtonVisible) {
+                sidebarEl.classList.add('secret-mode-active');
+            } else {
+                sidebarEl.classList.remove('secret-mode-active');
+            }
+
             document.getElementById('entryCount').innerText = entries.length;
             drawWheel();
             updateChancesOverlay();
+        }
+
+        // --- Drag and Drop Logic ---
+        function handleDragStart(e) {
+            draggedIndex = parseInt(this.getAttribute('data-index'));
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetIndex = parseInt(this.getAttribute('data-index'));
+            if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+            const movedItem = entries.splice(draggedIndex, 1)[0];
+            entries.splice(targetIndex, 0, movedItem);
+
+            renderEntries();
+            saveData();
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedIndex = null;
         }
 
         function updateFakeChance(index, val) {
@@ -866,6 +925,7 @@
                 secretBtn.classList.remove('visible');
                 entriesBtn.classList.remove('editing');
             }
+            renderEntries(); // רענון כדי להציג/להסתיר את ידיות הגרירה
         }
 
         function toggleHistoryEditMode() {
@@ -888,9 +948,9 @@
             const toggleLogo = document.getElementById('toggleLogo');
             sidebar.classList.toggle('closed');
             if (sidebar.classList.contains('closed')) {
-                currentRotation += 360; // סגירה -> ימינה
+                currentRotation += 360;
             } else {
-                currentRotation -= 360; // פתיחה -> שמאל
+                currentRotation -= 360;
             }
             toggleLogo.style.transform = `rotate(${currentRotation}deg)`;
         }
