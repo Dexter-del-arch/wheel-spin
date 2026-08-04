@@ -201,7 +201,6 @@
         .toggle-btn:hover { background: #ffffff; transform: scale(1.05); }
         .toggle-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; mix-blend-mode: multiply; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* כפתור הבית מקבל בדיוק את אותה התנהגות ואנימציה כמו כפתור ההגדרות */
         .btn-back-home {
             position: fixed;
             top: 30px;
@@ -226,7 +225,7 @@
             transform: scale(1.05);
         }
 
-        /* מחלקת סגירה משותפת שגורמת גם לכפתור הבית וגם ללוגו ההגדרות לזוז יחד החוצה */
+        /* סגירה משותפת: ברגע שההגדרות נסגרות, גם כפתור הבית וגם כפתור ההגדרות זזים הצידה יחד */
         .sidebar.closed ~ .toggle-btn,
         .sidebar.closed ~ .btn-back-home {
             transform: translateX(420px);
@@ -332,7 +331,6 @@
             </div>
         </div>
 
-        <!-- כפתורי ההגדרות והבית -->
         <button class="toggle-btn" onclick="toggleSidebar()">
             <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
         </button>
@@ -1110,7 +1108,7 @@
         }
 
         function addHistory(name) {
-            history.unshift({ name, time: new Date().toLocaleTimeString()};
+            history.unshift({ name, time: new Date().toLocaleTimeString() });
             renderHistory();
             saveData();
         }
