@@ -201,7 +201,6 @@
         .toggle-btn:hover { background: #ffffff; transform: scale(1.05); }
         .toggle-logo { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; mix-blend-mode: multiply; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* כפתור הבית מעוצב בדיוק כמו כפתור ההגדרות וזז ונסגר יחד איתו */
         .btn-back-home {
             position: fixed;
             top: 30px;
@@ -226,7 +225,7 @@
             transform: scale(1.05);
         }
 
-        /* ברגע שההגדרות סגורות (.closed), שניהם מחליקים החוצה יחד */
+        /* ברגע שההגדרות נסגרות, שני הכפתורים זזים החוצה יחד באותה אנימציה בדיוק */
         .sidebar.closed ~ .toggle-btn,
         .sidebar.closed ~ .btn-back-home {
             transform: translateX(420px);
@@ -332,7 +331,6 @@
             </div>
         </div>
 
-        <!-- כפתורי ההגדרות והבית ממוקמים ברצף כך ששניהם נשלטים יחד -->
         <button class="toggle-btn" onclick="toggleSidebar()">
             <img src="Dark Logo.png" alt="Toggle Menu" class="toggle-logo" id="toggleLogo">
         </button>
@@ -796,37 +794,40 @@
                 ctx.translate(260, 260);
                 ctx.rotate(angle + sliceAngle / 2);
 
+                // --- חישוב מדויק של רוחב הפרוסה לפי הזווית שלה כדי שהטקסט לעולם לא יחרוג ---
+                const radius = 220; 
+                const chordLength = 2 * radius * Math.sin(sliceAngle / 2);
+                const maxAvailableWidth = Math.max(50, chordLength - 25);
+
                 let fontSize = 22;
                 ctx.font = `bold ${fontSize}px Arial`;
-                
-                const maxAvailableWidth = 190; 
                 let textWidth = ctx.measureText(item.name).width;
 
                 if (textWidth > maxAvailableWidth) {
-                    fontSize = Math.max(10, Math.floor(22 * (maxAvailableWidth / textWidth)));
+                    fontSize = Math.max(8, Math.floor(22 * (maxAvailableWidth / textWidth)));
                     ctx.font = `bold ${fontSize}px Arial`;
                 }
 
                 if (item.img) {
                     ctx.save();
                     ctx.beginPath();
-                    ctx.arc(215, 0, 20, 0, Math.PI * 2);
+                    ctx.arc(175, 0, 18, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
-                    ctx.drawImage(item.img, 195, -20, 40, 40);
+                    ctx.drawImage(item.img, 157, -18, 36, 36);
                     ctx.restore();
 
                     ctx.fillStyle = "white";
                     ctx.textAlign = "right";
                     ctx.shadowColor = "rgba(0,0,0,0.5)";
                     ctx.shadowBlur = 4;
-                    ctx.fillText(item.name, 185, fontSize / 3);
+                    ctx.fillText(item.name, 145, fontSize / 3);
                 } else {
                     ctx.fillStyle = "white";
                     ctx.textAlign = "right";
                     ctx.shadowColor = "rgba(0,0,0,0.5)";
                     ctx.shadowBlur = 4;
-                    ctx.fillText(item.name, 220, fontSize / 3);
+                    ctx.fillText(item.name, 210, fontSize / 3);
                 }
                 ctx.restore();
             });
@@ -1124,7 +1125,6 @@
             }
 
             list.innerHTML = '';
-            history.history?.forEach?.((item, index) => {}); // safety
             history.forEach((item, index) => {
                 const li = document.createElement('div');
                 li.className = 'history-item';
